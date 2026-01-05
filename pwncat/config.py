@@ -80,14 +80,14 @@ def local_dir_type(value: str) -> str:
 
 
 def bool_type(value: str) -> bool:
-
+    """Convert string to boolean value."""
     if isinstance(value, bool):
         return value
 
-    value = value.lower()
-    if value == "1" or value == "true" or value == "on":
+    value_lower = value.lower()
+    if value_lower in ("1", "true", "on", "yes"):
         return True
-    elif value == "0" or value == "false" or value == "off":
+    if value_lower in ("0", "false", "off", "no"):
         return False
 
     raise ValueError(f"{value}: expected boolean value")

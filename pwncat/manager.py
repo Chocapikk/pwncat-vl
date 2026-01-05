@@ -429,16 +429,15 @@ class Listener(threading.Thread):
                         x509.NameAttribute(NameOID.COMMON_NAME, "mysite.com"),
                     ]
                 )
+                now = datetime.datetime.now(datetime.timezone.utc)
                 cert = (
                     x509.CertificateBuilder()
                     .subject_name(subject)
                     .issuer_name(issuer)
                     .public_key(key.public_key())
                     .serial_number(x509.random_serial_number())
-                    .not_valid_before(datetime.datetime.utcnow())
-                    .not_valid_after(
-                        datetime.datetime.utcnow() + datetime.timedelta(days=365)
-                    )
+                    .not_valid_before(now)
+                    .not_valid_after(now + datetime.timedelta(days=365))
                     .add_extension(
                         x509.SubjectAlternativeName([x509.DNSName("localhost")]),
                         critical=False,
@@ -1116,8 +1115,7 @@ class Manager:
                     interactive_complete.set()
                     if output_thread is not None:
                         output_thread.join()
-                        output_thread.join()
-            except:  # noqa: E722
+            except Exception:  # Catch all exceptions to prevent REPL crashes
                 # We don't want to die because of an uncaught exception, but
                 # at least let the user know something happened. This should
                 # probably be configurable somewhere.
