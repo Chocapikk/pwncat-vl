@@ -89,14 +89,10 @@ class Path:
 
         if uid == user.id and (mode & stat.S_IWUSR):
             return True
-        elif group.id == gid and (mode & stat.S_IWGRP):
+        if group.id == gid and (mode & stat.S_IWGRP):
             return True
-        else:
-            if group.id == gid and (mode & stat.S_IWGRP):
-                return True
-            else:
-                if mode & stat.S_IWOTH:
-                    return True
+        if mode & stat.S_IWOTH:
+            return True
 
         return False
 
@@ -112,14 +108,10 @@ class Path:
 
         if uid == user.id and (mode & stat.S_IRUSR):
             return True
-        elif group.id == gid and (mode & stat.S_IRGRP):
+        if group.id == gid and (mode & stat.S_IRGRP):
             return True
-        else:
-            if group.id == gid and (mode & stat.S_IRGRP):
-                return True
-            else:
-                if mode & stat.S_IROTH:
-                    return True
+        if mode & stat.S_IROTH:
+            return True
 
         return False
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+"""Enumerate Windows hotfixes installed on the target system."""
 
+import csv
+import io
 
 import rich.markup
 
@@ -7,10 +10,6 @@ import pwncat
 from pwncat.db import Fact
 from pwncat.platform.windows import Windows
 from pwncat.modules.enumerate import EnumerateModule
-
-"""
-TODO: This should use csvreader.
-"""
 
 
 class HotfixData(Fact):
@@ -52,15 +51,27 @@ class Module(EnumerateModule):
             text=True,
         )
 
-        # Process the standard output from the command
+        # Process the standard output from the command using csv reader
         with proc.stdout as stream:
-            for line in stream:
-                line = line.strip()
+            content = stream.read()
+            # Filter out empty lines before parsing
+            lines = [line for line in content.splitlines() if line.strip()]
+            if not lines:
+                proc.wait()
+                return
 
-                if not line or "Caption,Description,HotFixID,InstalledOn" in line:
+            reader = csv.DictReader(io.StringIO("\n".join(lines)))
+            for row in reader:
+                try:
+                    caption = row.get("Caption", "").strip()
+                    hotfixid = row.get("HotFixID", "").strip()
+                    tag = row.get("Description", "").strip()
+                    installed_on = row.get("InstalledOn", "").strip()
+
+                    if hotfixid:  # Only yield if we have a valid hotfix ID
+                        yield HotfixData(self.name, caption, hotfixid, tag, installed_on)
+                except (ValueError, KeyError):
+                    # Skip malformed rows
                     continue
-
-                _, caption, tag, hotfixid, installed_on = line.split(",")
-                yield HotfixData(self.name, caption, hotfixid, tag, installed_on)
 
         proc.wait()

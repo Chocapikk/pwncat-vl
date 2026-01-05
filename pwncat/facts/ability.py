@@ -17,6 +17,10 @@ from pwncat.db import Fact
 from pwncat.gtfobins import Capability
 from pwncat.platform.linux import LinuxReader, LinuxWriter
 
+# Maximum file length for GTFO file writes when size is unknown.
+# This is a deliberately large value to handle files of any reasonable size.
+GTFO_MAX_FILE_LENGTH = 100 * 1024 * 1024 * 1024  # 100 GiB
+
 
 def build_gtfo_ability(
     source: str,
@@ -50,7 +54,7 @@ def build_gtfo_ability(
             source=source,
             uid=uid,
             method=method,
-            length=100000000000,  # TODO: WE SHOULD FIX THIS???
+            length=GTFO_MAX_FILE_LENGTH,
             source_uid=source_uid,
             **kwargs,
         )

@@ -12,7 +12,7 @@ import string
 import termios
 from io import TextIOWrapper
 from enum import Enum, Flag, auto
-from typing import List, Optional
+from typing import Any, List, Optional, Tuple, Union
 
 import netifaces
 from rich import markup
@@ -105,19 +105,20 @@ def strip_markup(styled_text: str) -> str:
     return text.plain
 
 
-def isprintable(data) -> bool:
+def isprintable(data: Union[str, bytes]) -> bool:
     """
     This is a convenience function to be used rather than the usual
     ``str.printable`` boolean value, as that built-in **DOES NOT** consider
     newlines to be part of the printable data set (weird!)
     """
 
-    if type(data) is str:
+    if isinstance(data, str):
         data = data.encode("utf-8")
     return all(c in bytes(string.printable, "ascii") for c in data)
 
 
-def human_readable_size(size, decimal_places=2):
+def human_readable_size(size: float, decimal_places: int = 2) -> str:
+    """Convert bytes to human-readable size string."""
     for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
         if size < 1000.0:
             return f"{size:.{decimal_places}f}{unit}"
@@ -125,23 +126,26 @@ def human_readable_size(size, decimal_places=2):
     return f"{size:.{decimal_places}f}{unit}"
 
 
-def human_readable_delta(seconds):
-    """This produces a human-readable time-delta output suitable for output to
-    the terminal. It assumes that "seconds" is less than 1 day. I.e. it will only
-    display at most, hours minutes and seconds."""
+def human_readable_delta(seconds: float) -> str:
+    """
+    Produce a human-readable time-delta output suitable for output to
+    the terminal.
 
+    Assumes that "seconds" is less than 1 day. It will only display
+    at most hours, minutes and seconds.
+    """
     if seconds < 60:
         return f"{seconds:.2f} seconds"
 
     output = [f"{int(seconds % 60)} seconds"]
     minutes = seconds // 60
-    output.append(f"{minutes % 60} minutes")
+    output.append(f"{int(minutes % 60)} minutes")
 
     if minutes < 60:
         return f"{output[1]} and {output[0]}"
 
     hours = minutes // 60
-    output.append(f"{hours} hours")
+    output.append(f"{int(hours)} hours")
 
     return f"{output[2]}, {output[1]} and {output[0]}"
 
@@ -228,10 +232,12 @@ def random_string(length: int = 8):
     )
 
 
-def enter_raw_mode(non_block=True):
-    """Set stdin/stdout to raw mode to pass data directly.
+def enter_raw_mode(non_block: bool = True) -> Tuple[List[Any], int]:
+    """
+    Set stdin/stdout to raw mode to pass data directly.
 
-    returns: the old state of the terminal
+    :param non_block: whether to set non-blocking mode
+    :return: tuple of (old termios state, original file flags)
     """
 
     # Ensure we don't have any weird buffering issues
@@ -273,7 +279,7 @@ def enter_raw_mode(non_block=True):
     return old, orig_fl
 
 
-def push_term_state():
+def push_term_state() -> None:
     """Save the current terminal state on our state stack
     so we can easily return to the current state."""
 
@@ -287,10 +293,8 @@ def push_term_state():
     )
 
 
-def pop_term_state():
-    """
-    Return the terminal to the state that was last pushed
-    """
+def pop_term_state() -> None:
+    """Return the terminal to the state that was last pushed."""
 
     try:
         state = STORED_TERM_STATE.pop()
@@ -299,19 +303,22 @@ def pop_term_state():
         pass
 
 
-def restore_terminal(state, new_line=True):
-    """restore the stdio state from the result of "enter_raw_mode" """
+def restore_terminal(state: Tuple[List[Any], int], new_line: bool = True) -> None:
+    """Restore the stdio state from the result of ``enter_raw_mode``."""
     termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, state[0])
-    # tty.setcbreak(sys.stdin)
     fcntl.fcntl(sys.stdin, fcntl.F_SETFL, state[1])
     if new_line:
         sys.stdout.write("\n")
 
 
-def get_ip_addr() -> str:
-    """Retrieve the current IP address. This will return the first tun/tap
-    interface if availabe. Otherwise, it will return the first "normal"
-    interface with no preference for wired/wireless."""
+def get_ip_addr() -> Optional[str]:
+    """
+    Retrieve the current IP address.
+
+    This will return the first tun/tap interface if available.
+    Otherwise, it will return the first "normal" interface with
+    no preference for wired/wireless.
+    """
 
     PROTO = netifaces.AF_INET
     ifaces = [

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
+"""
+Enumerate network shares on the target Windows system.
 
+Note: We could parse the share `type` to determine access to non-default network shares.
+See: https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/getaccessmask-method-in-class-win32-share
+"""
+
+import csv
+import io
 
 import rich.markup
 
@@ -7,16 +15,6 @@ import pwncat
 from pwncat.db import Fact
 from pwncat.platform.windows import Windows
 from pwncat.modules.enumerate import EnumerateModule
-
-"""
-TODO: This should use csvreader.
-"""
-
-"""
-TODO: We could parse the `type` here and determine if we have access to
-non-default network shares?
-https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/getaccessmask-method-in-class-win32-share
-"""
 
 
 class NetworkShare(Fact):
@@ -77,40 +75,37 @@ class Module(EnumerateModule):
             text=True,
         )
 
-        # Process the standard output from the command
+        # Process the standard output from the command using csv reader
         with proc.stdout as stream:
-            for line in stream:
-                line = line.strip()
+            content = stream.read()
+            lines = [line for line in content.splitlines() if line.strip()]
+            if not lines:
+                proc.wait()
+                return
 
-                if (
-                    not line
-                    or "Node,AccessMask,AllowMaximum,Caption,Description,InstallDate,MaximumAllowed,Name,Path,Status,Type"
-                    in line
-                ):
+            reader = csv.DictReader(io.StringIO("\n".join(lines)))
+            for row in reader:
+                try:
+                    caption = row.get("Caption", "").strip()
+                    tag = row.get("Description", "").strip()
+                    install_date = row.get("InstallDate", "").strip()
+                    name = row.get("Name", "").strip()
+                    path = row.get("Path", "").strip()
+                    status = row.get("Status", "").strip()
+                    share_type = row.get("Type", "").strip()
+
+                    if name:
+                        yield NetworkShare(
+                            self.name,
+                            caption=caption,
+                            tag=tag,
+                            install_date=install_date,
+                            name=name,
+                            path=path,
+                            status=status,
+                            share_type=share_type,
+                        )
+                except (ValueError, KeyError):
                     continue
-
-                (
-                    _,
-                    access_mask,
-                    allow_maximum,
-                    caption,
-                    tag,
-                    install_date,
-                    maximum_allowed,
-                    name,
-                    path,
-                    status,
-                    share_type,
-                ) = line.split(",")
-                yield NetworkShare(
-                    self.name,
-                    caption=caption,
-                    tag=tag,
-                    install_date=install_date,
-                    name=name,
-                    path=path,
-                    status=status,
-                    share_type=share_type,
-                )
 
         proc.wait()

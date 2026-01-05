@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+"""Enumerate antivirus products installed on the target Windows system."""
 
+import csv
+import io
 
 import rich.markup
 
@@ -8,12 +11,8 @@ from pwncat.db import Fact
 from pwncat.platform.windows import Windows
 from pwncat.modules.enumerate import EnumerateModule
 
-"""
-TODO: This should use csvreader.
-"""
 
-
-class MountedDrive(Fact):
+class AntivirusProduct(Fact):
     def __init__(self, source, av_name: str, exe_path: str):
         super().__init__(source=source, types=["protection.antivirus"])
 
@@ -48,15 +47,23 @@ class Module(EnumerateModule):
             text=True,
         )
 
-        # Process the standard output from the command
+        # Process the standard output from the command using csv reader
         with proc.stdout as stream:
-            for line in stream:
-                line = line.strip()
+            content = stream.read()
+            lines = [line for line in content.splitlines() if line.strip()]
+            if not lines:
+                proc.wait()
+                return
 
-                if not line or "displayName,pathToSignedReportingExe" in line:
+            reader = csv.DictReader(io.StringIO("\n".join(lines)))
+            for row in reader:
+                try:
+                    av_name = row.get("displayName", "").strip()
+                    exe_path = row.get("pathToSignedReportingExe", "").strip()
+
+                    if av_name:
+                        yield AntivirusProduct(self.name, av_name, exe_path)
+                except (ValueError, KeyError):
                     continue
-
-                _, av_name, exe_path = line.split(",")
-                yield MountedDrive(self.name, av_name, exe_path)
 
         proc.wait()

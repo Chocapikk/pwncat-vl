@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
+"""Enumerate mounted drives on the target Windows system."""
 
+import csv
+import io
 
 import rich.markup
 
@@ -7,10 +10,6 @@ import pwncat
 from pwncat.db import Fact
 from pwncat.platform.windows import Windows
 from pwncat.modules.enumerate import EnumerateModule
-
-"""
-TODO: This should use csvreader.
-"""
 
 
 class MountedDrive(Fact):
@@ -49,17 +48,28 @@ class Module(EnumerateModule):
             text=True,
         )
 
-        # Process the standard output from the command
+        # Process the standard output from the command using csv reader
         with proc.stdout as stream:
-            for line in stream:
-                line = line.strip()
+            content = stream.read()
+            lines = [line for line in content.splitlines() if line.strip()]
+            if not lines:
+                proc.wait()
+                return
 
-                if not line or "Caption,Description,SystemName,VolumeName" in line:
+            reader = csv.DictReader(io.StringIO("\n".join(lines)))
+            for row in reader:
+                try:
+                    caption = row.get("Caption", "").strip()
+                    drive_letter = caption[0] if caption else ""
+                    tag = row.get("Description", "").strip()
+                    system_name = row.get("SystemName", "").strip()
+                    drive_name = row.get("VolumeName", "").strip()
+
+                    if drive_letter:
+                        yield MountedDrive(
+                            self.name, drive_letter, tag, drive_name, system_name
+                        )
+                except (ValueError, KeyError, IndexError):
                     continue
-
-                _, drive_letter, tag, system_name, drive_name = line.split(",")
-                yield MountedDrive(
-                    self.name, drive_letter[0], tag, drive_name, system_name
-                )
 
         proc.wait()
