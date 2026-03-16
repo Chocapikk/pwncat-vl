@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Replaced `netifaces` dependency with `psutil` to fix build failure on Python 3.14 (C extension incompatibility).
+- Replaced `zodburi` dependency with direct ZODB storage instantiation (`MappingStorage`/`FileStorage`) to remove dependency on `pkg_resources`.
+- Replaced all `pkg_resources.resource_filename()` calls with `importlib.resources.files()` (standard library, Python 3.9+) across `platform/linux.py`, `modules/linux/implant/pam.py`, `modules/linux/enumerate/system/uname.py`, and `modules/windows/powersploit.py`.
+- Fixed `pwncat-cs --download-plugins` command in Dockerfile (renamed to `pwncat-vl`).
+
 ## [0.5.9] - 2025-07-06
 
 ### Added
