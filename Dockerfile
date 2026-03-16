@@ -1,4 +1,4 @@
-FROM python:3.14-alpine as builder
+FROM python:3.9-alpine as builder
 
 # Install python3 and development files
 RUN set -eux \
@@ -24,7 +24,7 @@ RUN set -eux \
 	&& pip install . \
 	&& pwncat-vl --download-plugins
 
-FROM python:3.14-alpine as final
+FROM python:3.9-alpine as final
 
 # Add libstdc++ and create the working directory
 RUN set -eux \
@@ -32,7 +32,7 @@ RUN set -eux \
 	&& mkdir /work
 
 # Copy installed packages from builder image
-COPY --from=builder /usr/local/lib/python3.14 /usr/local/lib/python3.14
+COPY --from=builder /usr/local/lib/python3.9 /usr/local/lib/python3.9
 COPY --from=builder /usr/local/bin/pwncat-vl /usr/local/bin/pwncat-vl
 
 # Set working directory
