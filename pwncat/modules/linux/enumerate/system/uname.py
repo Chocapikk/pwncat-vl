@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import json
 from typing import List, Optional
-
 from importlib.resources import files as _pkg_files
 
 from pwncat.db import Fact
@@ -121,9 +120,7 @@ class Module(EnumerateModule):
         yield HostnameData(self.name, hostname)
 
         # Handle Kernel vulnerabilities
-        with open(
-            str(_pkg_files("pwncat").joinpath("data/lester.json"))
-        ) as filp:
+        with open(str(_pkg_files("pwncat").joinpath("data/lester.json"))) as filp:
             vulns = json.load(filp)
 
             version_string = f"{version.major}.{version.minor}.{version.patch}"

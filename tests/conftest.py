@@ -61,11 +61,9 @@ def session_for(request):
         manager_args = {}
 
     if "config" not in manager_args:
-        manager_args["config"] = StringIO(
-            """
+        manager_args["config"] = StringIO("""
 set -g db "memory://"
-        """
-        )
+        """)
 
     import pwncat.manager
 

@@ -23,7 +23,6 @@ import subprocess
 from io import TextIOWrapper, BufferedIOBase, UnsupportedOperation
 from typing import List, Union, BinaryIO, Optional, Generator
 from subprocess import TimeoutExpired, CalledProcessError
-
 from importlib.resources import files as _pkg_files
 
 import pwncat

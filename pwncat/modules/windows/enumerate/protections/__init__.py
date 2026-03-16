@@ -49,9 +49,7 @@ class Module(EnumerateModule):
           }
         }
         query_sysinfo
-        """.replace(
-            "query_sysinfo", random_string(8)
-        )
+        """.replace("query_sysinfo", random_string(8))
 
         try:
             info = session.platform.powershell(query_system_info)[0]

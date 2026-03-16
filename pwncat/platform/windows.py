@@ -607,14 +607,12 @@ class Windows(Platform):
     def setup_prompt(self):
         """Set a prompt method for powershell to ensure our prompt looks pretty :)"""
 
-        self.powershell(
-            """
+        self.powershell("""
 function prompt {
   $ESC = [char]27
   Write-Host "$ESC[31m(remote)$ESC[33m $env:UserName@$env:ComputerName$ESC[0m:$ESC[36m$($executionContext.SessionState.Path.CurrentLocation)$ESC[0m$" -NoNewLine
   return " "
-}"""
-        )
+}""")
 
     def _bootstrap_stage_two(self):
         """This routine upgrades a standard powershell or cmd shell to an

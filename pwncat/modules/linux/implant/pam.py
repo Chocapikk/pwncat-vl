@@ -2,7 +2,6 @@
 import io
 import hashlib
 from subprocess import CalledProcessError
-
 from importlib.resources import files as _pkg_files
 
 import pwncat

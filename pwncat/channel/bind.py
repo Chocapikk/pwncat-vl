@@ -73,7 +73,7 @@ class Bind(Socket):
 
             try:
                 # Wait for a connection
-                (client, address) = self.server.accept()
+                client, address = self.server.accept()
                 self._socket_connected(client)
             except KeyboardInterrupt:
                 raise ChannelError(self, "listener aborted")

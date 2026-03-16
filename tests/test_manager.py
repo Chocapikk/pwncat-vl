@@ -6,14 +6,12 @@ import pwncat.manager
 
 def test_config_fileobj():
 
-    configuration = io.StringIO(
-        """
+    configuration = io.StringIO("""
 set -g db "memory://"
 set -g prefix c-k
 set -g on_load {  }
 set -g backdoor_user "config_test"
-    """
-    )
+    """)
 
     with pwncat.manager.Manager(config=configuration) as manager:
         assert manager.config["backdoor_user"] == "config_test"

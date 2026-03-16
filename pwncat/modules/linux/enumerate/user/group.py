@@ -27,7 +27,7 @@ class Module(EnumerateModule):
                 for group_line in filp:
                     try:
                         # Extract the group fields
-                        (group_name, hash, gid, members) = group_line.split(":")
+                        group_name, hash, gid, members = group_line.split(":")
                         gid = int(gid)
                         members = [m.strip() for m in members.split(",") if m.strip()]
 

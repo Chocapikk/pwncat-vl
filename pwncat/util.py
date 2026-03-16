@@ -8,13 +8,13 @@ import sys
 import tty
 import fcntl
 import random
+import socket
 import string
 import termios
 from io import TextIOWrapper
 from enum import Enum, Flag, auto
 from typing import List, Optional
 
-import socket
 import psutil
 from rich import markup
 from rich.console import Console
