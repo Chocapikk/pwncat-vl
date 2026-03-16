@@ -14,7 +14,8 @@ from io import TextIOWrapper
 from enum import Enum, Flag, auto
 from typing import List, Optional
 
-import netifaces
+import socket
+import psutil
 from rich import markup
 from rich.console import Console
 
@@ -313,10 +314,10 @@ def get_ip_addr() -> str:
     interface if availabe. Otherwise, it will return the first "normal"
     interface with no preference for wired/wireless."""
 
-    PROTO = netifaces.AF_INET
+    all_addrs = psutil.net_if_addrs()
     ifaces = [
         iface
-        for iface in netifaces.interfaces()
+        for iface in all_addrs
         if not iface.startswith("virbr")
         and not iface.startswith("lo")
         and not iface.startswith("docker")
@@ -325,20 +326,14 @@ def get_ip_addr() -> str:
     # look for a tun/tap interface
     for iface in ifaces:
         if iface.startswith("tun") or iface.startswith("tap"):
-            addrs = netifaces.ifaddresses(iface)
-            if PROTO not in addrs:
-                continue
-            for a in addrs[PROTO]:
-                if "addr" in a:
-                    return a["addr"]
+            for snic in all_addrs[iface]:
+                if snic.family == socket.AF_INET and snic.address:
+                    return snic.address
 
     # Try again. We don't care what kind now
     for iface in ifaces:
-        addrs = netifaces.ifaddresses(iface)
-        if PROTO not in addrs:
-            continue
-        for a in addrs[PROTO]:
-            if "addr" in a:
-                return a["addr"]
+        for snic in all_addrs[iface]:
+            if snic.family == socket.AF_INET and snic.address:
+                return snic.address
 
     return None

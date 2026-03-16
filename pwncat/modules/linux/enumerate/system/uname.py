@@ -2,7 +2,7 @@
 import json
 from typing import List, Optional
 
-import pkg_resources
+from importlib.resources import files as _pkg_files
 
 from pwncat.db import Fact
 from pwncat.facts import ArchData, HostnameData
@@ -122,7 +122,7 @@ class Module(EnumerateModule):
 
         # Handle Kernel vulnerabilities
         with open(
-            pkg_resources.resource_filename("pwncat", "data/lester.json")
+            str(_pkg_files("pwncat").joinpath("data/lester.json"))
         ) as filp:
             vulns = json.load(filp)
 
