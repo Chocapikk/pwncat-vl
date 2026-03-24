@@ -900,18 +900,20 @@ class Manager:
 
         # Connect/open the database
         uri = self.config["db"]
+        # Preserve zodburi's original cache_size default (10000) instead of
+        # ZODB.DB's default (400) to avoid a silent performance regression.
+        db_kwargs = {"cache_size": 10000}
+
         if uri == "memory://" or uri == "memory:":
             storage = ZODB.MappingStorage.MappingStorage()
-            factory_args = {}
         elif uri.startswith("file://"):
-            path = uri[len("file://") :]
+            path = uri[len("file://"):]
             storage = ZODB.FileStorage.FileStorage(path)
-            factory_args = {}
         else:
             raise ValueError(
-                f"Unsupported database URI: {uri!r}. Use 'memory://' or 'file:///path/to/db.fs'"
+                f"Unsupported database URI: {uri!r}. Use 'memory://' or 'file://path/to/db.fs'"
             )
-        self.db = ZODB.DB(storage, **factory_args)
+        self.db = ZODB.DB(storage, **db_kwargs)
 
         conn = self.db.open()
 
