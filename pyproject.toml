@@ -11,7 +11,7 @@ addopts = "-v"
 
 [tool.poetry]
 name = "pwncat-vl"
-version = "0.6.3"
+version = "0.6.4"
 description = "Community-maintained fork of pwncat with Python 3.13+ support"
 authors = ["Chocapikk <balgogan@protonmail.com>", "Caleb Stewart <caleb.stewart94@gmail.com>", "John Hammond"]
 readme = "README.md"
@@ -30,27 +30,36 @@ pwncat-vl = "pwncat.__main__:main"
 "Bug Tracker" = "https://github.com/Chocapikk/pwncat-vl/issues"
 
 [tool.poetry.dependencies]
+# Reproducibility + supply-chain protection is provided by ``poetry.lock``
+# (committed alongside this file): every transitive package is recorded
+# with its SHA-256 hashes, so ``poetry install`` refuses any artefact that
+# was tampered with on PyPI. The constraints below stay deliberately
+# permissive so end-users running ``pip install pwncat-vl`` can co-exist
+# with the rest of their pentest toolchain. Security-sensitive packages
+# (``cryptography``, ``paramiko-ng``) use the tilde (``~``) operator to
+# only accept patch updates of the audited minor.
 python = "^3.9"
-psutil = "^6.0.0"
-packaging = ">=23.0"
+psutil = "^6.0"
+packaging = ">=23.0,<26"
 libpass = "^1.9"
 prompt-toolkit = "^3.0.19"
-requests = "^2.25.1"
-rich = "^10.4.0"
-ZODB3 = "^3.11.0"
-Jinja2 = "^3.0.1"
-paramiko-ng = "^2.8.8"
-cryptography = ">=41.0"
-pygments = ">=2.0"
-sphinx-toolbox = { version = "^2.15.2", optional = true }
-Sphinx = { version= "^4.0.2", optional = true }
-enum-tools = { version= "^0.7.0", optional = true }
-furo = { version= "^2021.11.23", optional = true }
+requests = "^2.32"
+rich = ">=10.4,<14"
+ZODB3 = "^3.11"
+Jinja2 = "^3.1"
+paramiko-ng = "~2.9"
+cryptography = "~43.0"
+pygments = "^2.0"
+sphinx-toolbox = { version = "^3.8", optional = true }
+Sphinx = { version = "^7.4", optional = true }
+enum-tools = { version = "^0.12", optional = true }
+furo = { version = ">=2024.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
-isort = "^5.8.0"
-pytest = "^6.2.4"
-flake8 = "^3.9.2"
+isort = "^5.13"
+pytest = "^8.0"
+flake8 = "^7.0"
+ruff = "^0.7"
 
 [tool.poetry.extras]
 docs = ["sphinx-toolbox", "Sphinx", "enum-tools", "furo"]

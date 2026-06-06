@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2026-06-06
+
+### Fixed
+- **channel/__init__.py**: `ChannelFile.write` was passing the full payload to `channel.send` on every loop iteration, retransmitting data when an underlying channel performed a partial write. The loop now slices the remaining unwritten bytes. Latent on the SSH/socket channels (which always send all bytes), but corrupted writes on any non-blocking variant.
+- **channel/__init__.py**: `ChannelFile.readinto` had dead code (a discarded `obj = b.obj if ...` assignment and an unreachable `if n == 0: return None` after a loop that guarantees `n != 0`). Removed.
+- **util.py**: `human_readable_size` mixed decimal thresholds (`size < 1000`) with IEC binary suffixes (`KiB`, `MiB`, ...). 1024 bytes now correctly renders as `1.00KiB` instead of `1.02KiB`.
+- **util.py**: `human_readable_delta` leaked float quotients (e.g. `1.0 minutes`) when called with a float `seconds`. Intermediate quotients are now cast to `int`.
+- **util.py**: `quote` failed to escape an embedded double quote when the token contained no whitespace, breaking shell parsing of `KEY=a"b` style environment assignments produced by the Linux platform.
+- **config.py**: `Config.copy` performed a shallow copy of `self.values` (a `dict[str, dict]`), causing mutations on the copy to leak into the original. Modules running in the background were observably affected by later configuration changes. The copy is now independent.
+- **gtfobins.py**: `Method.sudo_args` crashed with `IndexError` on an empty spec string instead of raising `SudoNotPossible`.
+- **gtfobins.py**: `Method.build_payload(suid=True)` aliased `self.suid` and then mutated it via `args += self.args`, so the method's `suid` list permanently grew on every call. Sudo escalations re-executed the same method now use a fresh list.
+- **manager.py**: The "max session count reached; shutting down" listener log was a normal string with un-interpolated `{self.address[0]}` placeholders (and used `[0]` twice instead of `[0]`/`[1]`). Now a proper f-string with host and port.
+- **modules/windows/enumerate/system/processes.py**: Rich tag mismatch `[yellow]stopped[/red]` rendered incorrectly for processes in state 8. Closing tag corrected to `[/yellow]`.
+- **platform/linux.py**: The locally-compiled binary produced by cross-compile was never unlinked, leaking one file in `/tmp` per cross-compile. Removed via a `try/finally` after upload, and the orphan `os.path.getsize` call dropped.
+- **platform/linux.py**: Narrowed `except Exception` around the busybox detection probe to specific I/O errors so unrelated exceptions surface.
+- **modules/linux/enumerate/user/__init__.py**: Narrowed `except Exception` while parsing `/etc/passwd` to `(ValueError, IndexError)` so unrelated bugs are no longer swallowed.
+
+### Changed
+- Preserved exception chaining (`raise ... from exc`) on 87 re-raise sites across 19 files. Tracebacks now expose the root cause when pwncat re-wraps a network, parsing, or process error into a domain-specific exception.
+- **modules/linux/enumerate/creds/private_key.py**: Migrated from the unmaintained `pycryptodome`/`Crypto.PublicKey.RSA` to the actively maintained `cryptography` library. Added a pure helper `_classify_key` that returns `(valid, encrypted)` and now recognises both PEM and OpenSSH-format keys.
+- Replaced `passlib = "^1.7.4"` (emits a `DeprecationWarning` on Python 3.12 because it imports the removed `crypt` stdlib module, and fails to import on Python 3.13) with `libpass = "^1.9"`, a maintained fork that uses the same `from passlib.hash import ...` import path. No code changes were required at call sites.
+- Used `json` from the stdlib instead of `python-rapidjson` in `gtfobins.py` (the only consumer used a single `json.load`).
+
+### Removed
+- `PyNaCl` — declared in `pyproject.toml` but unused by any file in the codebase.
+- `python-rapidjson` — replaced by stdlib `json`.
+- `pycryptodome` — replaced by `cryptography` (already pulled in transitively via paramiko, now declared explicitly).
+
+### Added
+- Declared `cryptography >=41.0` and `pygments >=2.0` explicitly in `pyproject.toml`; both were previously used but only resolved transitively.
+- **tests/test_ssh.py**: 5 unit tests covering the SSH `send` window-size blocking logic and exception safety.
+- **tests/test_util.py**: 40 unit tests covering `human_readable_size`, `human_readable_delta`, `quote`, `join`, `strip_ansi_escape`, `escape_markdown`, `isprintable`, `random_string`. Includes regressions for the size/delta/quote fixes above.
+- **tests/test_gtfobins.py**: 16 unit tests covering the in-memory data model, `find_binary`, `sudo_args` boundaries, the empty-spec crash regression, and a `build_payload` regression that proves `self.suid` no longer mutates across calls.
+- **tests/test_private_key.py**: 8 unit tests for the new `_classify_key` helper, covering encrypted/unencrypted RSA PEM and OpenSSH ed25519 keys, garbage, empty input, and malformed payloads.
+- **tests/test_config_types.py**: 33 unit tests for `key_type`, `KeyType`, `bool_type`, `local_file_type`, `local_dir_type`.
+- **tests/test_config_copy.py**: 2 regression tests proving `Config.copy()` is independent of the original.
+- **tests/test_channel_file.py**: 3 regression tests for the `ChannelFile.write` partial-send fix using a mocked channel.
+- Applied an automated lint sweep: `isort`, `flake8` (down to 0), `ruff` default profile (clean), and `ruff --select UP,RUF010,COM812,RET,SIM,B,C4,FURB,PIE,EM,PT,FLY,ISC --fix` for code-quality auto-fixes (649 automated fixes across 93 files: unused imports, redundant return, superfluous else, PEP 604/585 syntax, etc.).
+
 ## [0.6.3] - 2026-06-06
 
 ### Fixed
