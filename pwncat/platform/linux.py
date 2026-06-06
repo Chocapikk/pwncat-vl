@@ -31,6 +31,7 @@ import pwncat
 import pwncat.channel
 import pwncat.subprocess
 from pwncat import util
+from pwncat.channel import ChannelError
 from pwncat.gtfobins import Stream, GTFOBins, Capability, MissingBinary
 from pwncat.platform import Path, Platform, PlatformError
 
@@ -634,7 +635,9 @@ class Linux(Platform):
             if result.returncode == 0 and result.stdout.strip():
                 self.is_busybox = True
                 self.session.log("detected busybox environment")
-        except Exception:
+        except (OSError, ChannelError, AttributeError, ValueError):
+            # Channel/IO/parsing failures during the busybox probe are
+            # non-fatal: it just means we cannot detect busybox here.
             pass
 
         if self.shell == "" or self.shell is None:

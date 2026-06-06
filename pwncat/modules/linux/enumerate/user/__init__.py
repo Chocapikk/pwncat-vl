@@ -50,8 +50,8 @@ class Module(EnumerateModule):
                         users[name] = user
                         yield Status(user)
 
-                    except Exception:
-                        # Bad passwd line
+                    except (ValueError, IndexError):
+                        # Bad passwd line (wrong field count or non-int uid/gid)
                         continue
         except (FileNotFoundError, PermissionError) as exc:
             raise ModuleFailed(str(exc)) from exc
