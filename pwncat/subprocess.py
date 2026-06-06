@@ -14,6 +14,8 @@ subprocess module.
 
 """
 
+from __future__ import annotations
+
 from typing import IO
 from subprocess import (  # noqa: F401
     PIPE,

@@ -7,6 +7,8 @@ This module requires a host, user and either a password or identity (key) file.
 An optional port argument is also accepted.
 """
 
+from __future__ import annotations
+
 import os
 from typing import TextIO
 

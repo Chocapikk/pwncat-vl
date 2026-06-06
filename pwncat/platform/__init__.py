@@ -28,6 +28,8 @@ a session-specific path object by utilizing the ``session.platform.Path`` proper
 
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import stat

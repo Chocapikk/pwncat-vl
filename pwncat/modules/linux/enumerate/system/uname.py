@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import json
 from importlib.resources import files as _pkg_files
 

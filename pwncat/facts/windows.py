@@ -2,6 +2,8 @@
 Windows-specific facts which are used in multiple places throughout the framework.
 """
 
+from __future__ import annotations
+
 from enum import IntFlag
 from datetime import datetime
 from collections.abc import Callable

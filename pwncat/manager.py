@@ -24,6 +24,8 @@ callback which receives the new session as an argument.
 
 """
 
+from __future__ import annotations
+
 import os
 import ssl
 import sys

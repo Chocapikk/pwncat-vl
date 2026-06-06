@@ -8,6 +8,8 @@ documentation.
 """
 
 
+from __future__ import annotations
+
 import persistent
 from persistent.list import PersistentList
 

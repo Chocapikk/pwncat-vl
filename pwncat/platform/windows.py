@@ -14,6 +14,8 @@ careful to cleanup all processes and files prior to return from your method
 or code as the C2 will not attempt to garbage collect file or process handles.
 """
 
+from __future__ import annotations
+
 import sys
 import gzip
 import json

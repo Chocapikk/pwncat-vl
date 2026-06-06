@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import pwncat
 from pwncat.modules import Status
 from pwncat.facts.windows import WindowsGroup

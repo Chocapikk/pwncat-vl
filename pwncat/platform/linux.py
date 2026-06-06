@@ -11,6 +11,8 @@ Popen can be running at a time. It is imperative that you call
 to calling any other pwncat methods.
 """
 
+from __future__ import annotations
+
 import os
 import stat
 import time

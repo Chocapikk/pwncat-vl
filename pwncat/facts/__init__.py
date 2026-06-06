@@ -5,6 +5,8 @@ should not generally need to use these types except as reference
 when interacting with data returned by an enumeration module.
 """
 
+from __future__ import annotations
+
 import time
 import subprocess
 from io import StringIO

@@ -15,6 +15,8 @@ utilize this class to instantiate a session via an established socket.
         manager.interactive()
 """
 
+from __future__ import annotations
+
 import os
 import ssl
 import errno

@@ -5,6 +5,8 @@ information needed across pwncat sessions to identify or interact with a target.
 No information in this object is specific to a connection protocol or session.
 """
 
+from __future__ import annotations
+
 import enum
 
 import persistent

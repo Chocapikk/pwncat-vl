@@ -4,6 +4,8 @@ the framework.
 """
 
 
+from __future__ import annotations
+
 from pwncat.facts import User, Group
 
 

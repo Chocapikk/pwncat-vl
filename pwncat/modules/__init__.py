@@ -32,6 +32,8 @@ Example Module
 
 """
 
+from __future__ import annotations
+
 import inspect
 import functools
 from typing import Any

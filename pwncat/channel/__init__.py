@@ -14,6 +14,8 @@ locate an appropriate channel based on your arguments, and pass all arguments
 to the constructor for the appropriate channel type.
 """
 
+from __future__ import annotations
+
 import time
 from io import DEFAULT_BUFFER_SIZE, RawIOBase, BufferedReader, BufferedWriter
 from abc import ABC, abstractmethod
