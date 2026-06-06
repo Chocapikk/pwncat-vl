@@ -37,4 +37,4 @@ class Module(EnumerateModule):
                 token=token,
             )
         except ProtocolError as exc:
-            raise ModuleFailed(f"failed to load badpotato: {exc}")
+            raise ModuleFailed(f"failed to load badpotato: {exc}") from exc

@@ -29,7 +29,7 @@ class SSLBind(Bind):
         try:
             client = self.context.wrap_socket(client, server_side=True)
         except ssl.SSLError as exc:
-            raise ChannelError(self, str(exc))
+            raise ChannelError(self, str(exc)) from exc
 
         super()._socket_connected(client)
 
@@ -38,7 +38,7 @@ class SSLBind(Bind):
         try:
             super().connect()
         except ssl.SSLError as exc:
-            raise ChannelError(self, str(exc))
+            raise ChannelError(self, str(exc)) from exc
 
     def _generate_self_signed_cert(self):
         """Generate a self-signed certificate"""

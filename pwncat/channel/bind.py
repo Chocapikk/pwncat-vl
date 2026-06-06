@@ -33,8 +33,8 @@ class Bind(Socket):
         if isinstance(port, str):
             try:
                 port = int(port)
-            except ValueError:
-                raise ChannelError(self, "invalid port number")
+            except ValueError as exc:
+                raise ChannelError(self, "invalid port number") from exc
 
         if port is None:
             raise ChannelError(self, "no port specified")
@@ -60,7 +60,7 @@ class Bind(Socket):
             elif exc.args[0] == errno.EADDRNOTAVAIL:
                 error_message = "unable to bind on given address"
 
-            raise ChannelError(self, error_message)
+            raise ChannelError(self, error_message) from exc
 
     def connect(self):
 
@@ -75,10 +75,10 @@ class Bind(Socket):
                 # Wait for a connection
                 client, address = self.server.accept()
                 self._socket_connected(client)
-            except KeyboardInterrupt:
-                raise ChannelError(self, "listener aborted")
+            except KeyboardInterrupt as exc:
+                raise ChannelError(self, "listener aborted") from exc
             except OSError as exc:
-                raise ChannelError(self, str(exc))
+                raise ChannelError(self, str(exc)) from exc
             finally:
                 self.server.close()
 

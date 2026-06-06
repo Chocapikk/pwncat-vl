@@ -66,8 +66,8 @@ class ProcessData(Fact):
             )
             if not result or not result[0]:
                 raise TimeoutError(self)
-        except PowershellError:
-            raise PermissionError(f"cannot wait for process w/ pid {self.pid}")
+        except PowershellError as exc:
+            raise PermissionError(f"cannot wait for process w/ pid {self.pid}") from exc
 
     def title(self, session):
         """Build a formatted description for this process"""
@@ -136,7 +136,7 @@ Get-WmiObject -Class Win32_Process | % {
             yield Status("requesting process list...")
             processes = session.platform.powershell(script)[0]
         except (IndexError, PowershellError) as exc:
-            raise ModuleFailed(f"failed to get running processes: {exc}")
+            raise ModuleFailed(f"failed to get running processes: {exc}") from exc
 
         for proc in processes:
             yield ProcessData(

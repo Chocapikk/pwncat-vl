@@ -387,7 +387,7 @@ class Listener(threading.Thread):
 
             return server
         except OSError as exc:
-            raise ListenerError(str(exc))
+            raise ListenerError(str(exc)) from exc
 
     def _ssl_wrap(self, server: socket.socket) -> ssl.SSLSocket:
         """Wrap the given server socket in an SSL context and return the new socket.
@@ -457,7 +457,7 @@ class Listener(threading.Thread):
 
             return context.wrap_socket(server)
         except ssl.SSLError as exc:
-            raise ListenerError(str(exc))
+            raise ListenerError(str(exc)) from exc
 
     def _close_socket(self, raw_server: socket.socket, server: socket.socket):
         """Close the listener socket"""
@@ -480,7 +480,7 @@ class Listener(threading.Thread):
         try:
             channel = pwncat.channel.create(protocol=self.protocol, client=client)
         except ChannelError as exc:
-            raise ListenerError(str(exc))
+            raise ListenerError(str(exc)) from exc
 
         return channel
 

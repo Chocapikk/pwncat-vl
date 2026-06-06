@@ -54,7 +54,7 @@ class Module(EnumerateModule):
         try:
             info = session.platform.powershell(query_system_info)[0]
         except PowershellError as exc:
-            raise ModuleFailed(f"failed to load sysinfo function: {exc}")
+            raise ModuleFailed(f"failed to load sysinfo function: {exc}") from exc
 
         yield DistroVersionData(
             self.name,

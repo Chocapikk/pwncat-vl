@@ -145,7 +145,7 @@ class Module(BaseModule):
             yield Status("importing Invoke-BloodHound cmdlet")
             session.run("manage.powershell.import", path=self.SHARPHOUND_URL)
         except (ModuleFailed, PowershellError) as exc:
-            raise ModuleFailed(f"while importing Invoke-BloodHound: {exc}")
+            raise ModuleFailed(f"while importing Invoke-BloodHound: {exc}") from exc
 
         # Try to create a temporary file. We're just going to delete it, but
         # this gives us a tangible temporary path to put the zip file.
@@ -180,7 +180,7 @@ class Module(BaseModule):
             yield Status("executing bloodhound collector")
             session.platform.powershell(powershell_command)
         except (ModuleFailed, PowershellError) as exc:
-            raise ModuleFailed(f"Invoke-BloodHound: {exc}")
+            raise ModuleFailed(f"Invoke-BloodHound: {exc}") from exc
 
         output_name = path.parts[-1]
         path_list = list(path.parent.glob(f"**_{output_name}"))
@@ -202,7 +202,7 @@ class Module(BaseModule):
                 except FileNotFoundError:
                     pass
                 raise ModuleFailed(f"permission error: {output_path}") from exc
-            raise ModuleFailed("bloodhound failed or access to output was denied")
+            raise ModuleFailed("bloodhound failed or access to output was denied") from exc
 
         # Delete the zip from the target
         yield Status("deleting collected results from target")

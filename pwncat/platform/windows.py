@@ -319,7 +319,7 @@ class PopenWindows(pwncat.subprocess.Popen):
         try:
             result = self.platform.run_method("Process", "poll", self.handle)
         except ProtocolError as exc:
-            raise RuntimeError(exc.message)
+            raise RuntimeError(exc.message) from exc
 
         if result["stopped"]:
             self.returncode = result["code"] or 0
@@ -793,8 +793,8 @@ function prompt {
             result = self.run_method("Process", "start", args)
         except ProtocolError as exc:
             if "pipe" in exc.message:
-                raise OSError(exc.message)
-            raise FileNotFoundError(exc.message)
+                raise OSError(exc.message) from exc
+            raise FileNotFoundError(exc.message) from exc
 
         return PopenWindows(
             self,
@@ -864,7 +864,7 @@ function prompt {
             try:
                 self.run_method("PowerShell", "start", wait=False)
             except ProtocolError as exc:
-                raise PlatformError(exc.message)
+                raise PlatformError(exc.message) from exc
 
             # Wait for the powershell runspace to be up and running
             output = self.channel.recvline()
@@ -951,7 +951,7 @@ function prompt {
         try:
             result = self.run_method("File", "open", path, mode)
         except ProtocolError as exc:
-            raise FileNotFoundError(f"{path}: {exc.message}")
+            raise FileNotFoundError(f"{path}: {exc.message}") from exc
 
         stream = WindowsFile(self, mode, result["handle"], name=path)
 
@@ -1046,12 +1046,12 @@ function prompt {
         except PowershellError as exc:
             msg = str(exc)
             if "not exist" in msg:
-                raise FileNotFoundError(kwargs["Path"])
+                raise FileNotFoundError(kwargs["Path"]) from exc
             if "exist" in msg:
-                raise FileExistsError(kwargs["Path"])
+                raise FileExistsError(kwargs["Path"]) from exc
             if "directory" in msg:
-                raise NotADirectoryError(kwargs["Path"])
-            raise PermissionError(kwargs["Path"])
+                raise NotADirectoryError(kwargs["Path"]) from exc
+            raise PermissionError(kwargs["Path"]) from exc
 
     def abspath(self, path: str) -> str:
         """Convert the given relative path to absolute.
@@ -1165,10 +1165,10 @@ function prompt {
             return [r["Name"] for r in (result[0] if len(result) else [])]
         except PowershellError as exc:
             if "not exist" in str(exc):
-                raise FileNotFoundError(path)
+                raise FileNotFoundError(path) from exc
             if "directory" in str(exc):
-                raise NotADirectoryError(path)
-            raise PermissionError(path)
+                raise NotADirectoryError(path) from exc
+            raise PermissionError(path) from exc
 
     def lstat(self):
         """Perform stat on a link instead of the target of the link."""
@@ -1206,8 +1206,8 @@ function prompt {
             self.powershell(f'Rename-Item -Path "{src}" -NewName "{dst}"')
         except PowershellError as exc:
             if "not exist" in str(exc):
-                raise FileNotFoundError(src)
-            raise PermissionError(src)
+                raise FileNotFoundError(src) from exc
+            raise PermissionError(src) from exc
 
     def rmdir(self, path: str, recurse: bool = False):
         """Remove a directory, optionally remove all contents first.
@@ -1230,8 +1230,8 @@ function prompt {
             self.powershell(command)
         except PowershellError as exc:
             if "not exist" in str(exc) or "empty" in str(exc):
-                raise FileNotFoundError(path)
-            raise PermissionError(path)
+                raise FileNotFoundError(path) from exc
+            raise PermissionError(path) from exc
 
     def stat(self, path: str) -> stat_result:
         """Perform a stat on the given path, returning important file
@@ -1325,8 +1325,8 @@ function prompt {
             self.powershell(f'echo $null >> "{path}"')
         except PowershellError as exc:
             if "part of the path" in str(exc).lower():
-                raise FileNotFoundError(path)
-            raise PermissionError(path)
+                raise FileNotFoundError(path) from exc
+            raise PermissionError(path) from exc
 
     def umask(self, mask: int | None = None):
         """Set or retrieve the current umask value"""
@@ -1352,8 +1352,8 @@ function prompt {
             self.powershell(command)
         except PowershellError as exc:
             if "not exist" in str(exc) or "empty" in str(exc):
-                raise FileNotFoundError(path)
-            raise PermissionError(path)
+                raise FileNotFoundError(path) from exc
+            raise PermissionError(path) from exc
 
     def whoami(self) -> str:
         """Retrieve the current user name
@@ -1404,7 +1404,7 @@ function prompt {
         try:
             result = self.run_method("PowerShell", "run", script, depth)
         except ProtocolError as exc:
-            raise PowershellError(exc.message)
+            raise PowershellError(exc.message) from exc
 
         return [json.loads(x) for x in result["output"]]
 

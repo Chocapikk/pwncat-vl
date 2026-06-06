@@ -85,7 +85,7 @@ class UserToken(ExecuteAbility):
         try:
             session.platform.impersonate(self.token)
         except PlatformError as exc:
-            raise ModuleFailed(f"failed to impersonate token: {exc}")
+            raise ModuleFailed(f"failed to impersonate token: {exc}") from exc
 
         return lambda session: session.platform.revert_to_self()
 

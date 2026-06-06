@@ -83,8 +83,8 @@ class Method:
 
         try:
             self.stream = Stream._member_map_[data.get("stream", "PRINT").upper()]
-        except KeyError:
-            raise ValueError(f"invalid stream specifier: {data['stream']}")
+        except KeyError as exc:
+            raise ValueError(f"invalid stream specifier: {data['stream']}") from exc
 
         self.binary = binary
         self.payload = data.get("payload", "{command}")
@@ -326,8 +326,8 @@ class Binary:
                 method_cap = Capability._member_map_[
                     method_data.get("type", "WRONG").upper()
                 ]
-            except KeyError:
-                raise RuntimeError(f"invalid method type for {name}")
+            except KeyError as exc:
+                raise RuntimeError(f"invalid method type for {name}") from exc
 
             method = Method(self, method_cap, method_data)
             self.methods.append(method)
@@ -498,6 +498,6 @@ class GTFOBins:
                 value = self.which(key, quote=quote)
                 # Whoops! No dependency
                 if value is None:
-                    raise MissingBinary(key)
+                    raise MissingBinary(key) from exc
                 # Next time, we have it
                 args[key] = value

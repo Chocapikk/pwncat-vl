@@ -25,8 +25,8 @@ class PasswdImplant(Implant):
         try:
             session.platform.su(self.user, password=self.password)
             return lambda session: session.platform.channel.send(b"exit\n")
-        except PermissionError:
-            raise ModuleFailed(f"authentication as {self.user} failed")
+        except PermissionError as exc:
+            raise ModuleFailed(f"authentication as {self.user} failed") from exc
 
     def remove(self, session: "pwncat.manager.Session"):
         """Remove the added line"""
@@ -37,14 +37,14 @@ class PasswdImplant(Implant):
         try:
             with session.platform.open("/etc/passwd", "r") as filp:
                 passwd_contents = [line for line in filp if line != self.added_line]
-        except (FileNotFoundError, PermissionError):
-            raise ModuleFailed("failed to read /etc/passwd")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ModuleFailed("failed to read /etc/passwd") from exc
 
         try:
             with session.platform.open("/etc/passwd", "w") as filp:
                 filp.writelines(passwd_contents)
-        except (FileNotFoundError, PermissionError):
-            raise ModuleFailed("failed to write /etc/passwd")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ModuleFailed("failed to write /etc/passwd") from exc
 
     def title(self, session: "pwncat.manager.Session"):
         return f"""[blue]{self.user}[/blue]:[red]{self.password}[/red] added to [cyan]/etc/passwd[/cyan] w/ uid=0"""
@@ -89,8 +89,8 @@ class Module(ImplantModule):
             yield Status("reading passwd contents")
             with session.platform.open("/etc/passwd", "r") as filp:
                 passwd_contents = list(filp)
-        except (FileNotFoundError, PermissionError):
-            raise ModuleFailed("failed to read /etc/passwd")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ModuleFailed("failed to read /etc/passwd") from exc
 
         # Hash the password
         yield Status("hashing password")
@@ -110,5 +110,5 @@ class Module(ImplantModule):
 
             # Return an implant tracker
             return PasswdImplant(self.name, backdoor_user, backdoor_pass, new_line)
-        except (FileNotFoundError, PermissionError):
-            raise ModuleFailed("failed to write /etc/passwd")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ModuleFailed("failed to write /etc/passwd") from exc

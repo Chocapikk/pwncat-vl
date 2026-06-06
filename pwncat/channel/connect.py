@@ -33,8 +33,8 @@ class Connect(Socket):
         if isinstance(port, str):
             try:
                 port = int(port)
-            except ValueError:
-                raise ChannelError(self, "invalid port")
+            except ValueError as exc:
+                raise ChannelError(self, "invalid port") from exc
 
         with Progress(
             f"connecting to [blue]{host}[/blue]:[cyan]{port}[/cyan]",
@@ -54,12 +54,12 @@ class Connect(Socket):
 
             try:
                 client = socket.create_connection((host, port))
-            except socket.gaierror:
-                raise ChannelError(self, "unable to resolve host")
-            except ConnectionRefusedError:
-                raise ChannelError(self, "connection refused, check your port")
-            except OSError:
-                raise ChannelError(self, "invalid host provided")
+            except socket.gaierror as exc:
+                raise ChannelError(self, "unable to resolve host") from exc
+            except ConnectionRefusedError as exc:
+                raise ChannelError(self, "connection refused, check your port") from exc
+            except OSError as exc:
+                raise ChannelError(self, "invalid host provided") from exc
 
             progress.log(
                 f"connection to "

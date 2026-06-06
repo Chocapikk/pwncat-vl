@@ -28,8 +28,8 @@ def FileType(mode: str = "r"):
 
         try:
             return open(path, mode)
-        except (FileNotFoundError, PermissionError):
-            raise ValueError(f"{path}: unable to open with mode: {mode}")
+        except (FileNotFoundError, PermissionError) as exc:
+            raise ValueError(f"{path}: unable to open with mode: {mode}") from exc
 
     return _file_type
 

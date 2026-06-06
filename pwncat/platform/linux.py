@@ -1212,9 +1212,9 @@ class Linux(Platform):
 
         try:
             self.run(command, check=True)
-        except pwncat.subprocess.CalledProcessError:
+        except pwncat.subprocess.CalledProcessError as exc:
             self.run(["rm", "-f", output])
-            raise PlatformError("compilation failed")
+            raise PlatformError("compilation failed") from exc
         finally:
             try:
                 self.run(["rm", "-f", *real_sources], check=True)
@@ -1378,8 +1378,8 @@ class Linux(Platform):
                 check=True,
             )
             return proc.stdout.strip()
-        except CalledProcessError:
-            raise FileNotFoundError(str(path))
+        except CalledProcessError as exc:
+            raise FileNotFoundError(str(path)) from exc
 
     def open(
         self,
@@ -1571,7 +1571,7 @@ class Linux(Platform):
                 )
                 path = result.stdout.rstrip("\n")
             except CalledProcessError as exc:
-                raise PermissionError(str(exc))
+                raise PermissionError(str(exc)) from exc
         else:
             path = tempdir / (util.random_string(length) + suffix)
             while path.exists():
@@ -2047,8 +2047,8 @@ class Linux(Platform):
 
         try:
             self.run(["chown", f"{uid}:{gid}", path], check=True)
-        except CalledProcessError:
-            raise PermissionError("failed to change ownership")
+        except CalledProcessError as exc:
+            raise PermissionError("failed to change ownership") from exc
 
     def mkdir(self, path: str, mode: int = 0o777, parents: bool = False):
         """Create a new directory"""

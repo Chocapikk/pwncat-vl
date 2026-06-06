@@ -162,8 +162,8 @@ class CreatedFile(Tamper):
             session.platform.Path(self.path).unlink()
         except FileNotFoundError:
             pass
-        except PermissionError:
-            raise ModuleFailed("permission error")
+        except PermissionError as exc:
+            raise ModuleFailed("permission error") from exc
 
         self.reverted = True
 
@@ -207,8 +207,8 @@ class CreatedDirectory(Tamper):
 
         try:
             session.platform.Path(self.path).rmdir()
-        except PermissionError:
-            raise ModuleFailed("permission error")
+        except PermissionError as exc:
+            raise ModuleFailed("permission error") from exc
 
         self.reverted = True
 

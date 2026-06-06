@@ -23,7 +23,7 @@ class Module(EnumerateModule):
         try:
             privs = session.platform.powershell("Get-ProcessTokenPrivilege")[0]
         except (IndexError, PowershellError) as exc:
-            raise ModuleFailed(f"failed to find process token privs: {exc}")
+            raise ModuleFailed(f"failed to find process token privs: {exc}") from exc
 
         for priv in privs:
             yield ProcessTokenPrivilege(
