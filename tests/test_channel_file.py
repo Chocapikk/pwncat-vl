@@ -19,7 +19,11 @@ def _make_file():
     """
 
     channel = MagicMock()
-    cf = object.__new__(ChannelFile)
+    # ChannelFile derives from io.RawIOBase, whose C-level allocator
+    # rejects ``object.__new__``. Use the class' own ``__new__`` so we
+    # can bypass the original ``__init__`` (which talks to a live
+    # channel) while still satisfying the C runtime.
+    cf = ChannelFile.__new__(ChannelFile)
     cf.channel = channel
     cf.mode = "rw"
     cf.sof_marker = None

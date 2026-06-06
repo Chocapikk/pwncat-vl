@@ -24,17 +24,39 @@ def _classify_key(content: str):
 
     data = content.encode("utf-8", errors="replace")
 
+    # The PEM/OpenSSH framing is what tells us whether *anything*
+    # private-key-shaped is present at all. We use it to distinguish
+    # "encrypted key we can't load without a password" from "this
+    # blob isn't a key in the first place". Without this, cryptography
+    # versions older than 44 raise ``ValueError`` for encrypted ed25519
+    # OpenSSH keys (rather than ``TypeError``) and we would mis-classify
+    # a valid encrypted key as garbage.
+    looks_like_private_key = (
+        b"BEGIN OPENSSH PRIVATE KEY" in data
+        or b"BEGIN RSA PRIVATE KEY" in data
+        or b"BEGIN DSA PRIVATE KEY" in data
+        or b"BEGIN EC PRIVATE KEY" in data
+        or b"BEGIN PRIVATE KEY" in data
+        or b"BEGIN ENCRYPTED PRIVATE KEY" in data
+    )
+
     for loader in (load_ssh_private_key, load_pem_private_key):
         try:
             loader(data, password=None)
             return True, False
         except TypeError:
-            # Both loaders raise TypeError when the key is encrypted
-            # and we did not pass a password.
+            # Modern cryptography raises TypeError on encrypted-but-no-password.
             return True, True
         except (ValueError, UnsupportedAlgorithm):
             # Wrong format for this loader, try the next one.
             continue
+
+    # All loaders refused without raising the dedicated "encrypted"
+    # signal. If we still saw a PEM/OpenSSH header it is overwhelmingly
+    # likely the key is encrypted (and the loader chose ValueError
+    # instead of TypeError to report it).
+    if looks_like_private_key:
+        return True, True
 
     return False, False
 
