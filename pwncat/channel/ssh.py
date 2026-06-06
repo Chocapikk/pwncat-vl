@@ -85,7 +85,17 @@ class Ssh(Channel):
         """Send data to the remote shell. This is a blocking call
         that only returns after all data is sent."""
 
-        self.client.sendall(data)
+        # Check if we are about to overflow the current SSH window
+        if len(data) > self.client.out_window_size:
+            original_timeout = self.client.gettimeout()
+            try:
+                self.client.settimeout(None)  # Enable blocking
+                self.client.sendall(data)
+            finally:
+                self.client.settimeout(original_timeout)  # Back to non-blocking
+        else:
+            # The data fits in the current window; no need to block
+            self.client.sendall(data)
 
         return len(data)
 
