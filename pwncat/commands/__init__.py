@@ -20,6 +20,8 @@ Example Custom Command
     class Command(CommandDefinition):
         \""" Command documentation placed in the docstring \"""
 
+from __future__ import annotations
+
         PROG = "custom"
         ARGS = {
             "--option,-o": Parameter(Complete.NONE, help="help info", action="store_true"),

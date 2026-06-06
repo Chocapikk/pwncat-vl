@@ -8,6 +8,8 @@ replaces the context of the current session with a different user.
 Lastly, a remote implant allows pwncat to reconnect to the target.
 """
 
+from __future__ import annotations
+
 import enum
 from typing import Union
 from collections.abc import Callable

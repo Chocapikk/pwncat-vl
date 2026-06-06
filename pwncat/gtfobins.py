@@ -7,6 +7,8 @@ with things like SETUID binaries and sudo rules. A full list of all supported
 binaries can be seen in ``pwncat/data/gtfobins.json``.
 """
 
+from __future__ import annotations
+
 import os
 import json
 import shlex

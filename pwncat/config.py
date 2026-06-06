@@ -21,6 +21,8 @@ specific to your module or command.
 
 """
 
+from __future__ import annotations
+
 import os
 import copy
 import ipaddress

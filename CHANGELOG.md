@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2026-06-06
+
+### Fixed
+- Python 3.9 compatibility: added `from __future__ import annotations` to every module that uses PEP 604 union syntax (`X | Y`) so type annotations no longer evaluate at module load. v0.6.4 silently dropped Python 3.9 support after the ruff `UP` sweep rewrote `Optional[X]` to `X | None`; this restores it.
+
 ## [0.6.4] - 2026-06-06
 
 ### Fixed

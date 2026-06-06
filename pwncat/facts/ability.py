@@ -7,6 +7,8 @@ from GTFOBins methods simpler, since they are used in multiple places within
 pwncat.
 """
 
+from __future__ import annotations
+
 import functools
 import subprocess
 from io import TextIOWrapper

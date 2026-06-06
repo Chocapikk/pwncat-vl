@@ -6,6 +6,8 @@ to revert those modifications. This is not foolproof, but provides
 some ability to track your changes when on target.
 """
 
+from __future__ import annotations
+
 import datetime
 
 import pwncat
