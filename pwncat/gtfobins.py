@@ -13,7 +13,7 @@ from enum import Flag, auto
 from typing import IO, Any, Dict, List, Tuple, BinaryIO, Callable
 from collections.abc import Generator
 
-import rapidjson as json
+import json
 
 
 class ControlCodes:
