@@ -1,13 +1,42 @@
 #!/usr/bin/env python3
 
 import rich.markup
-from Crypto.PublicKey import RSA
+from cryptography.exceptions import UnsupportedAlgorithm
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_ssh_private_key,
+)
 
 import pwncat
 from pwncat.facts import PrivateKey
 from pwncat.modules import Status
 from pwncat.platform.linux import Linux
 from pwncat.modules.enumerate import Schedule, EnumerateModule
+
+
+def _classify_key(content: str):
+    """Try to parse the given private key content.
+
+    Returns ``(valid, encrypted)``. ``valid`` is ``True`` when the data
+    looks like a real private key (encrypted or not). ``encrypted`` is
+    ``True`` when the key is password-protected.
+    """
+
+    data = content.encode("utf-8", errors="replace")
+
+    for loader in (load_ssh_private_key, load_pem_private_key):
+        try:
+            loader(data, password=None)
+            return True, False
+        except TypeError:
+            # Both loaders raise TypeError when the key is encrypted
+            # and we did not pass a password.
+            return True, True
+        except (ValueError, UnsupportedAlgorithm):
+            # Wrong format for this loader, try the next one.
+            continue
+
+    return False, False
 
 
 class Module(EnumerateModule):
@@ -56,20 +85,11 @@ class Module(EnumerateModule):
                 with session.platform.open(fact.path, "r") as filp:
                     fact.content = filp.read().strip().replace("\r\n", "\n")
 
-                try:
-                    # Try to import the key to test if it's valid and if there's
-                    # a passphrase on the key. An "incorrect checksum" ValueError
-                    # is raised if there's a key. Not sure what other errors may
-                    # be raised, to be honest...
-                    RSA.importKey(fact.content)
-                except ValueError as exc:
-                    if "incorrect checksum" in str(exc).lower():
-                        # There's a passphrase on this key
-                        fact.encrypted = True
-                    else:
-                        # Some other error happened, probably not a key
-                        continue
+                valid, encrypted = _classify_key(fact.content)
+                if not valid:
+                    continue
 
+                fact.encrypted = encrypted
                 yield fact
             except (PermissionError, FileNotFoundError):
                 continue

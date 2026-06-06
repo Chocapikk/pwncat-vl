@@ -8,7 +8,6 @@ import dataclasses
 from io import StringIO
 
 import pytest
-from Crypto.PublicKey import RSA
 
 from pwncat.channel import ChannelError
 
