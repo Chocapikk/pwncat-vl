@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import shlex
-from typing import List
 
 from pwncat.db import Fact
 from pwncat.subprocess import CalledProcessError
@@ -18,7 +17,7 @@ class ProcessData(Fact):
         self.username: str = username
         self.pid: int = pid
         self.ppid: int = ppid
-        self.argv: List[str] = argv
+        self.argv: list[str] = argv
 
     def title(self, session):
         if self.uid == 0:

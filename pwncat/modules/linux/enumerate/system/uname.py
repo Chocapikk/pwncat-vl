@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import json
-from typing import List, Optional
 from importlib.resources import files as _pkg_files
 
 from pwncat.db import Fact
@@ -47,9 +46,9 @@ class KernelVulnerabilityData(Fact):
         super().__init__(source=source, types=["system.kernel.vuln"])
 
         self.name: str = name
-        self.versions: List[str] = versions
-        self.link: Optional[str] = link
-        self.cve: Optional[str] = cve
+        self.versions: list[str] = versions
+        self.link: str | None = link
+        self.cve: str | None = cve
         # All exploits are assumed working, but can be marked as not working
         self.working: bool = True
 
@@ -60,7 +59,7 @@ class KernelVulnerabilityData(Fact):
         return line
 
     def description(self, title):
-        line = f"Affected Versions: {repr(self.versions)}\n"
+        line = f"Affected Versions: {self.versions!r}\n"
         if self.link:
             line += f"Details: {self.link}"
         return line
@@ -93,7 +92,7 @@ class Module(EnumerateModule):
 
         # Grab the uname output
         output = session.platform.run(
-            "uname -s -n -r -m -o", capture_output=True, text=True, check=True
+            "uname -s -n -r -m -o", capture_output=True, text=True, check=True,
         )
 
         fields = output.stdout.split(" ")

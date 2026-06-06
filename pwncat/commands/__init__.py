@@ -47,9 +47,8 @@ import argparse
 import importlib.util
 from io import TextIOWrapper
 from enum import Enum, auto
-from typing import Callable
 from functools import partial
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 import rich.text
 from pygments import token
@@ -165,7 +164,7 @@ def get_module_choices(command):
 
     yield from [
         module.name.removeprefix("agnostic.").removeprefix(
-            command.manager.target.platform.name + "."
+            command.manager.target.platform.name + ".",
         )
         for module in command.manager.target.find_module("*")
     ]
@@ -430,7 +429,7 @@ class CommandParser:
         """We need to dynamically load commands from pwncat.commands"""
 
         self.manager = manager
-        self.commands: list["CommandDefinition"] = []
+        self.commands: list[CommandDefinition] = []
 
         for loader, module_name, is_pkg in pkgutil.walk_packages(__path__):
             if module_name == "base":
@@ -480,7 +479,7 @@ class CommandParser:
             completer=completer,
             lexer=lexer,
             style=merge_styles(
-                [style, Style.from_dict({"bottom-toolbar": "#333333 bg:#ffffff"})]
+                [style, Style.from_dict({"bottom-toolbar": "#333333 bg:#ffffff"})],
             ),
             auto_suggest=auto_suggest,
             complete_while_typing=False,
@@ -531,7 +530,7 @@ class CommandParser:
             except ChannelClosed as exc:
                 # A channel was unexpectedly closed
                 self.manager.log(
-                    f"[yellow]warning[/yellow]: {exc.channel}: channel closed"
+                    f"[yellow]warning[/yellow]: {exc.channel}: channel closed",
                 )
                 # Ensure any existing sessions are cleaned from the manager
                 exc.cleanup(self.manager)
@@ -541,7 +540,7 @@ class CommandParser:
                 break
             except Exception as exc:
                 console.log(
-                    f"[red]error[/red]: [cyan]{name}[/cyan]: [yellow]{command}[/yellow]: {str(exc)}"
+                    f"[red]error[/red]: [cyan]{name}[/cyan]: [yellow]{command}[/yellow]: {exc!s}",
                 )
                 break
 
@@ -607,7 +606,7 @@ class CommandParser:
             except ChannelClosed as exc:
                 # A channel was unexpectedly closed
                 self.manager.log(
-                    f"[yellow]warning[/yellow]: {exc.channel}: channel closed"
+                    f"[yellow]warning[/yellow]: {exc.channel}: channel closed",
                 )
                 # Ensure any existing sessions are cleaned from the manager
                 exc.cleanup(self.manager)
@@ -643,7 +642,7 @@ class CommandParser:
             line = f"{argv[0]} ".join(line.split(f"{argv[0]} ")[1:])
             # Search for a matching command
             for command in self.commands:
-                if command.PROG == argv[0]:
+                if argv[0] == command.PROG:
                     break
             else:
                 if argv[0] in self.aliases:
@@ -658,7 +657,7 @@ class CommandParser:
 
             if self.manager.target is None and not command.LOCAL:
                 self.manager.log(
-                    f"[red]error[/red]: {argv[0]}: active session required"
+                    f"[red]error[/red]: {argv[0]}: active session required",
                 )
                 return
 
@@ -704,12 +703,12 @@ class CommandParser:
             if not self.found_prefix and c != pwncat.config["prefix"].value:
                 buffer += c
                 continue
-            elif not self.found_prefix and c == pwncat.config["prefix"].value:
+            if not self.found_prefix and c == pwncat.config["prefix"].value:
                 self.found_prefix = True
                 channel.send(buffer)
                 buffer = b""
                 continue
-            elif self.found_prefix:
+            if self.found_prefix:
                 try:
                     binding = pwncat.config.binding(c)
                     if binding.strip() == "pass":
@@ -785,7 +784,7 @@ class CommandParser:
             return
 
         termios.tcsetattr(
-            sys.stdin.fileno(), termios.TCSADRAIN, self.saved_term_state[0]
+            sys.stdin.fileno(), termios.TCSADRAIN, self.saved_term_state[0],
         )
         # tty.setcbreak(sys.stdin)
         fcntl.fcntl(sys.stdin, fcntl.F_SETFL, self.saved_term_state[1])
@@ -815,7 +814,7 @@ class CommandLexer(RegexLexer):
                     "^" + re.escape(command.PROG) + "( |$)",
                     token.Name.Function,
                     command.PROG,
-                )
+                ),
             )
             mode = []
             if command.ARGS is not None:
@@ -906,7 +905,7 @@ class CommandCompleter(Completer):
     command definitions and their associated argument definitions."""
 
     def __init__(
-        self, manager: "pwncat.manager.Manager", commands: list["CommandDefinition"]
+        self, manager: "pwncat.manager.Manager", commands: list["CommandDefinition"],
     ):
         """Construct a new command completer"""
 
@@ -935,13 +934,13 @@ class CommandCompleter(Completer):
                             self.layers[command.PROG][2][name] = completer
                             option_names.append(name)
                 self.layers[command.PROG][0] = WordCompleter(
-                    option_names + ["--help", "-h"]
+                    option_names + ["--help", "-h"],
                 )
 
         self.completer = WordCompleter(list(self.layers))
 
     def get_completions(
-        self, document: Document, complete_event: CompleteEvent
+        self, document: Document, complete_event: CompleteEvent,
     ) -> Iterable[Completion]:
         """Get a list of completions for the given document"""
 

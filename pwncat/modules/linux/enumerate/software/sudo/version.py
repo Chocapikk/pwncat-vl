@@ -56,7 +56,7 @@ class Module(EnumerateModule):
         try:
             # Check the sudo version number
             result = session.platform.run(
-                ["sudo", "--version"], capture_output=True, check=True
+                ["sudo", "--version"], capture_output=True, check=True,
             )
         except CalledProcessError:
             # Something went wrong with the sudo version
@@ -84,7 +84,7 @@ class Module(EnumerateModule):
 
         # Can we match this output to a specific sudo version?
         match = re.search(
-            r"sudo version ([0-9]+\.[0-9]+\.[^\s]*)", version, re.IGNORECASE
+            r"sudo version ([0-9]+\.[0-9]+\.[^\s]*)", version, re.IGNORECASE,
         )
         if match is not None and match.group(1) is not None:
             vulnerable = False

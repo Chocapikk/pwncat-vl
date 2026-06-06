@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict, Optional
 from datetime import datetime
 
 import pwncat
@@ -17,21 +16,21 @@ class DomainUser(WindowsUser):
         source: str,
         name: str,
         uid: str,
-        account_expires: Optional[datetime],
+        account_expires: datetime | None,
         description: str,
         enabled: bool,
         full_name: str,
-        password_changeable_date: Optional[datetime],
-        password_expires: Optional[datetime],
+        password_changeable_date: datetime | None,
+        password_expires: datetime | None,
         user_may_change_password: bool,
         password_required: bool,
-        password_last_set: Optional[datetime],
-        last_logon: Optional[datetime],
+        password_last_set: datetime | None,
+        last_logon: datetime | None,
         principal_source: str,
         domain: str,
-        data: Dict,
-        password: Optional[str] = None,
-        hash: Optional[str] = None,
+        data: dict,
+        password: str | None = None,
+        hash: str | None = None,
     ):
         super().__init__(
             source=source,
@@ -64,11 +63,10 @@ class DomainUser(WindowsUser):
 
     def __repr__(self):
         if self.password is None and self.hash is None:
-            return f"""DomainUser(uid={self.id}, name={repr(self.name)}, domain={repr(self.domain)})"""
-        elif self.password is not None:
-            return f"""DomainUser(uid={repr(self.id)}, name={repr(self.name)}, domain={repr(self.domain)}, password={repr(self.password)})"""
-        else:
-            return f"""DomainUser(uid={repr(self.id)}, name={repr(self.name)}, domain={repr(self.domain)}, hash={repr(self.hash)})"""
+            return f"""DomainUser(uid={self.id}, name={self.name!r}, domain={self.domain!r})"""
+        if self.password is not None:
+            return f"""DomainUser(uid={self.id!r}, name={self.name!r}, domain={self.domain!r}, password={self.password!r})"""
+        return f"""DomainUser(uid={self.id!r}, name={self.name!r}, domain={self.domain!r}, hash={self.hash!r})"""
 
 
 class Module(EnumerateModule):

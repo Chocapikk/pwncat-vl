@@ -96,7 +96,7 @@ class Module(ImplantModule):
             raise ModuleFailed("only one pam implant may be installed at a time")
 
         yield Status("loading pam module source code")
-        with open(str(_pkg_files("pwncat").joinpath("data/pam.c")), "r") as filp:
+        with open(str(_pkg_files("pwncat").joinpath("data/pam.c"))) as filp:
             sneaky_source = filp.read()
 
         yield Status("checking selinux state")
@@ -105,7 +105,7 @@ class Module(ImplantModule):
                 raise ModuleFailed("selinux enabled in enforce mode")
             elif selinux.enabled:
                 session.log(
-                    "[yellow]warning[/yellow]: selinux is enabled; implant will be logged!"
+                    "[yellow]warning[/yellow]: selinux is enabled; implant will be logged!",
                 )
 
         # Hash the backdoor password and prepare for source injection
@@ -142,14 +142,14 @@ class Module(ImplantModule):
                 check=True,
             )
             pam_location = session.platform.Path(
-                result.stdout.strip().split("\n")[0]
+                result.stdout.strip().split("\n")[0],
             ).parent
         except CalledProcessError as exc:
             try:
                 session.platform.run(["rm", "-f", lib_path], check=True)
             except CalledProcessError:
                 session.register_fact(
-                    CreatedFile(source=self.name, uid=0, path=lib_path)
+                    CreatedFile(source=self.name, uid=0, path=lib_path),
                 )
             raise ModuleFailed("failed to locate pam installation location") from exc
 

@@ -6,7 +6,6 @@ No information in this object is specific to a connection protocol or session.
 """
 
 import enum
-from typing import Tuple, Optional
 
 import persistent
 import persistent.list
@@ -66,17 +65,17 @@ class Target(persistent.Persistent):
 
     def __init__(self):
 
-        self.name: Optional[str] = None
+        self.name: str | None = None
         """ An optional friendly name that can be used to refer to this target """
-        self.public_address: Optional[Tuple[str, int]] = None
+        self.public_address: tuple[str, int] | None = None
         """ Public address as routable by the attacker """
         self.platform: str = None
         """ Name of the platform used to interact with this target """
-        self.internal_address: Optional[Tuple[str, int]] = None
+        self.internal_address: tuple[str, int] | None = None
         """ Internal address as viewed by the target """
-        self.hostname: Optional[str] = None
+        self.hostname: str | None = None
         """ Hostname from the targets perspective """
-        self.guid: Optional[str] = None
+        self.guid: str | None = None
         """ Globally unique identifier normally determined by a platform
         specific algorithm. """
         self.os: OS = OS.UNKNOWN

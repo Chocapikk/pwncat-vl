@@ -13,7 +13,6 @@ import string
 import termios
 from io import TextIOWrapper
 from enum import Enum, Flag, auto
-from typing import List, Optional
 
 import psutil
 from rich import markup
@@ -77,7 +76,7 @@ class CompilationError(Exception):
     """
 
     def __init__(
-        self, source_error: bool, stdout: Optional[str], stderr: Optional[str]
+        self, source_error: bool, stdout: str | None, stderr: str | None,
     ):
         self.source_error = source_error
         self.stdout = stdout
@@ -90,8 +89,7 @@ class CompilationError(Exception):
         """
         if self.source_error:
             return "No working local or remote compiler found"
-        else:
-            return "Error during compilation of source files"
+        return "Error during compilation of source files"
 
 
 class RawModeExit(Exception):
@@ -147,7 +145,7 @@ def human_readable_delta(seconds):
     return f"{output[2]}, {output[1]} and {output[0]}"
 
 
-def join(argv: List[str]):
+def join(argv: list[str]):
     """Join the string much like shlex.join, except assume that each token
     is expecting double quotes. This allows variable references within the
     tokens."""
@@ -284,7 +282,7 @@ def push_term_state():
             sys.stdin,
             termios.tcgetattr(sys.stdin.fileno()),
             fcntl.fcntl(sys.stdin, fcntl.F_GETFL),
-        )
+        ),
     )
 
 

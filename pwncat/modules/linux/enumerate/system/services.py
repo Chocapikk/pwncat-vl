@@ -89,7 +89,7 @@ class Module(EnumerateModule):
     def enumerate(self, session):
 
         for fact in session.run(
-            "enumerate.gather", types=["system.init"], progress=self.progress
+            "enumerate.gather", types=["system.init"], progress=self.progress,
         ):
             if fact.init != Init.SYSTEMD:
                 return

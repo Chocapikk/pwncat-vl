@@ -15,7 +15,7 @@ def get_user_choices(command: CommandDefinition):
     yield from (
         user.name
         for user in command.manager.target.run(
-            "enumerate", progress=False, types=["user"]
+            "enumerate", progress=False, types=["user"],
         )
     )
 
@@ -33,7 +33,7 @@ class Link:
 
         if self.escalation.type == "escalate.spawn":
             self.result.log(
-                f"leaving behind open session as [cyan]{self.old_session.current_user().name}[/cyan]"
+                f"leaving behind open session as [cyan]{self.old_session.current_user().name}[/cyan]",
             )
 
         self.old_session.manager.target = self.old_session
@@ -108,7 +108,7 @@ class Command(CommandDefinition):
                 args.user = manager.target.find_user(name="root")
 
             with manager.target.task(
-                f"escalating to [cyan]{args.user.name}[/cyan]"
+                f"escalating to [cyan]{args.user.name}[/cyan]",
             ) as task:
                 self.do_escalate(manager, task, args.user, args)
 
@@ -129,7 +129,7 @@ class Command(CommandDefinition):
 
         if not found and args.user:
             console.log(
-                f"[yellow]warning[/yellow]: no direct escalations for {args.user.name}"
+                f"[yellow]warning[/yellow]: no direct escalations for {args.user.name}",
             )
         elif not found:
             console.log("[yellow]warning[/yellow]: no direct escalations found")
@@ -165,7 +165,7 @@ class Command(CommandDefinition):
                     continue
                 except IndexError:
                     manager.target.log(
-                        f"[red]error[/red]: no working escalation paths found for {user.name}"
+                        f"[red]error[/red]: no working escalation paths found for {user.name}",
                     )
                     break
 
@@ -173,7 +173,7 @@ class Command(CommandDefinition):
             for escalation in (e for e in escalations if e.uid == user.id):
                 try:
                     original_session.update_task(
-                        task, status=f"attempting {escalation.title(manager.target)}"
+                        task, status=f"attempting {escalation.title(manager.target)}",
                     )
                     result = escalation.escalate(manager.target)
 
@@ -194,7 +194,7 @@ class Command(CommandDefinition):
                     chain.append(link)
 
                     manager.log(
-                        f"escalation to {user.name} [green]successful[/green] using:"
+                        f"escalation to {user.name} [green]successful[/green] using:",
                     )
                     for link in chain:
                         manager.print(f" - {link}")
@@ -202,21 +202,21 @@ class Command(CommandDefinition):
                     return result
                 except ModuleFailed as exc:
                     manager.target.log(
-                        f"{escalation.title(manager.target)}: failed: {exc}"
+                        f"{escalation.title(manager.target)}: failed: {exc}",
                     )
                     failed.append(escalation)
 
             if not args.recursive:
                 manager.target.log(
-                    f"[red]error[/red]: no working direct escalations to {user.name}"
+                    f"[red]error[/red]: no working direct escalations to {user.name}",
                 )
-                return
+                return None
 
             # Attempt escalation to a different user and recurse
             for escalation in (e for e in escalations if e.uid != user.id):
                 try:
                     original_session.update_task(
-                        task, status=f"attempting {escalation.title(manager.target)}"
+                        task, status=f"attempting {escalation.title(manager.target)}",
                     )
                     result = escalation.escalate(manager.target)
 
@@ -236,6 +236,6 @@ class Command(CommandDefinition):
                     break
                 except ModuleFailed as exc:
                     manager.target.log(
-                        f"{escalation.title(manager.target)}: failed: {exc}"
+                        f"{escalation.title(manager.target)}: failed: {exc}",
                     )
                     failed.append(escalation)

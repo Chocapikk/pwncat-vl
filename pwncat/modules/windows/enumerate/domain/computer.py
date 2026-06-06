@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict
 
 import pwncat
 from pwncat.db import Fact
@@ -9,7 +8,7 @@ from pwncat.modules.enumerate import Schedule, EnumerateModule
 
 
 class ComputerObject(Fact):
-    def __init__(self, source: str, data: Dict):
+    def __init__(self, source: str, data: dict):
         super().__init__(source=source, types=["domain.computer"])
 
         self.computer = data
@@ -47,10 +46,10 @@ class ComputerObject(Fact):
         output.append(f"Computer SID: [cyan]{self['objectsid']}[/cyan]")
         output.append(f"Machine Account: [cyan]{self['samaccountname']}[/cyan]")
         output.append(
-            f"Operating System: [blue]{self['operatingsystem']} {self['operatingsystemversion']}[/blue]"
+            f"Operating System: [blue]{self['operatingsystem']} {self['operatingsystemversion']}[/blue]",
         )
         output.append(
-            f"Distinguished Name: [magenta]{self['distinguishedname']}[/magenta]"
+            f"Distinguished Name: [magenta]{self['distinguishedname']}[/magenta]",
         )
 
         return "\n".join(output)

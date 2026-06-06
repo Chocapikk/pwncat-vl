@@ -9,7 +9,8 @@ Lastly, a remote implant allows pwncat to reconnect to the target.
 """
 
 import enum
-from typing import Union, Callable
+from typing import Union
+from collections.abc import Callable
 
 import pwncat
 from pwncat.db import Fact
@@ -48,13 +49,13 @@ class Implant(Fact):
     :type uid: Union[int, str]
     """
 
-    def __init__(self, source: str, types: list[str], uid: Union[int, str]):
+    def __init__(self, source: str, types: list[str], uid: int | str):
         super().__init__(source=source, types=types)
 
         self.uid = uid
 
     def escalate(
-        self, session: "pwncat.manager.Session"
+        self, session: "pwncat.manager.Session",
     ) -> Union["pwncat.manager.Session", Callable[["pwncat.manager.Session"], None]]:
         """
         Escalate to the target user locally. If the implant type is ``implant.replace``, this

@@ -29,7 +29,7 @@ class Module(EnumerateModule):
 
         try:
             program_files = session.platform.powershell(
-                'Get-ChildItem "C:\\Program Files","C:\\Program Files (x86)" -ErrorAction SilentlyContinue | Select Fullname'
+                'Get-ChildItem "C:\\Program Files","C:\\Program Files (x86)" -ErrorAction SilentlyContinue | Select Fullname',
             )[0]
 
             if not isinstance(program_files, list):
@@ -40,5 +40,5 @@ class Module(EnumerateModule):
 
         except (PowershellError, IndexError) as exc:
             raise ModuleFailed(
-                f"failed to list program file directories: {exc}"
+                f"failed to list program file directories: {exc}",
             ) from exc

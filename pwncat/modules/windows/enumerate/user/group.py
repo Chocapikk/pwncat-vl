@@ -27,7 +27,7 @@ class Module(EnumerateModule):
         for group in groups[0]:
             try:
                 members = session.platform.powershell(
-                    f"Get-LocalGroupMember {group['Name']}"
+                    f"Get-LocalGroupMember {group['Name']}",
                 )
                 if members:
                     members = (

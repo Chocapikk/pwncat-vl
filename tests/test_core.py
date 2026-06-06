@@ -20,7 +20,7 @@ class TestConfig:
         import pwncat.manager
 
         config = io.StringIO(
-            'set -g db "memory://"\nset -g backdoor_user "testuser"\n'
+            'set -g db "memory://"\nset -g backdoor_user "testuser"\n',
         )
         with pwncat.manager.Manager(config=config) as manager:
             assert manager.config["backdoor_user"] == "testuser"

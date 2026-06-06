@@ -7,7 +7,6 @@ some ability to track your changes when on target.
 """
 
 import datetime
-from typing import Union, Optional
 
 import pwncat
 from pwncat.db import Fact
@@ -30,8 +29,8 @@ class Tamper(Fact):
     def __init__(
         self,
         source: str,
-        uid: Union[int, str],
-        timestamp: Optional[datetime.datetime] = None,
+        uid: int | str,
+        timestamp: datetime.datetime | None = None,
     ):
         super().__init__(source=source, types=["tamper"])
 
@@ -86,10 +85,10 @@ class ReplacedFile(Tamper):
     def __init__(
         self,
         source: str,
-        uid: Union[int, str],
+        uid: int | str,
         path: str,
-        data: Optional[Union[str, bytes]],
-        timestamp: Optional[datetime.datetime] = None,
+        data: str | bytes | None,
+        timestamp: datetime.datetime | None = None,
     ):
         super().__init__(source, uid, timestamp=timestamp)
 
@@ -124,7 +123,7 @@ class ReplacedFile(Tamper):
     def title(self, session: "pwncat.manager.Session"):
 
         return self._annotate_title(
-            session, f"replace content of [cyan]{self.path}[/cyan]"
+            session, f"replace content of [cyan]{self.path}[/cyan]",
         )
 
 
@@ -145,9 +144,9 @@ class CreatedFile(Tamper):
     def __init__(
         self,
         source: str,
-        uid: Union[int, str],
+        uid: int | str,
         path: str,
-        timestamp: Optional[datetime.datetime] = None,
+        timestamp: datetime.datetime | None = None,
     ):
         super().__init__(source, uid, timestamp=timestamp)
 
@@ -171,7 +170,7 @@ class CreatedFile(Tamper):
     def title(self, session: "pwncat.manager.Session"):
 
         return self._annotate_title(
-            session, f"created file at [cyan]{self.path}[/cyan]"
+            session, f"created file at [cyan]{self.path}[/cyan]",
         )
 
 
@@ -192,9 +191,9 @@ class CreatedDirectory(Tamper):
     def __init__(
         self,
         source: str,
-        uid: Union[int, str],
+        uid: int | str,
         path: str,
-        timestamp: Optional[datetime.datetime] = None,
+        timestamp: datetime.datetime | None = None,
     ):
         super().__init__(source, uid, timestamp=timestamp)
 
@@ -215,5 +214,5 @@ class CreatedDirectory(Tamper):
 
     def title(self, session: "pwncat.manager.Session"):
         return self._annotate_title(
-            session, f"created directory at [cyan]{self.path}[cyan]"
+            session, f"created directory at [cyan]{self.path}[cyan]",
         )

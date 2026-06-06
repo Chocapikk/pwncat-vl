@@ -91,7 +91,7 @@ class Command(CommandDefinition):
 
         if args.platform is None:
             manager.print(
-                "You have not specified a platform. Connections will be queued until initialized with the 'listeners' command."
+                "You have not specified a platform. Connections will be queued until initialized with the 'listeners' command.",
             )
             if not Confirm.ask("Are you sure?"):
                 return
@@ -114,7 +114,7 @@ class Command(CommandDefinition):
 
         if listener.state is ListenerState.FAILED:
             manager.log(
-                f"[red]error[/red]: listener startup failed: {listener.failure_exception}"
+                f"[red]error[/red]: listener startup failed: {listener.failure_exception}",
             )
         else:
             manager.log(f"new listener created for {listener}")

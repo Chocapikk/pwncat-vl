@@ -58,13 +58,13 @@ class Module(ImplantModule):
     ARGUMENTS = {
         **ImplantModule.ARGUMENTS,
         "backdoor_user": Argument(
-            str, default="pwncat", help="name of new uid=0 user (default: pwncat)"
+            str, default="pwncat", help="name of new uid=0 user (default: pwncat)",
         ),
         "backdoor_pass": Argument(
-            str, default="pwncat", help="password for new user (default: pwncat)"
+            str, default="pwncat", help="password for new user (default: pwncat)",
         ),
         "shell": Argument(
-            str, default="current", help="shell for new user (default: current)"
+            str, default="current", help="shell for new user (default: current)",
         ),
     }
 

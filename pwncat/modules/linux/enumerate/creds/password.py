@@ -39,7 +39,7 @@ class Module(EnumerateModule):
 
         # Run the command on the remote host
         proc = session.platform.Popen(
-            command, shell=True, stdout=pwncat.subprocess.PIPE
+            command, shell=True, stdout=pwncat.subprocess.PIPE,
         )
 
         # Iterate through the output
@@ -83,7 +83,7 @@ class Module(EnumerateModule):
 
                     # Check for dictionary is perl
                     match = re.search(
-                        r"password[\"']?\s+=>(.*)", content, re.IGNORECASE
+                        r"password[\"']?\s+=>(.*)", content, re.IGNORECASE,
                     )
                     if match is not None:
                         password = match.group(1).strip()

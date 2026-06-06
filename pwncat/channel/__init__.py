@@ -17,7 +17,6 @@ to the constructor for the appropriate channel type.
 import time
 from io import DEFAULT_BUFFER_SIZE, RawIOBase, BufferedReader, BufferedWriter
 from abc import ABC, abstractmethod
-from typing import Union, Optional
 
 import pwncat
 
@@ -83,7 +82,7 @@ class ChannelTimeout(ChannelError):
     """
 
     def __init__(self, ch, data: bytes):
-        super().__init__(ch, f"channel receive timed out: {repr(data)}")
+        super().__init__(ch, f"channel receive timed out: {data!r}")
         self.data: bytes = data
 
 
@@ -111,8 +110,8 @@ class ChannelFile(RawIOBase):
         self,
         channel: "Channel",
         mode: str,
-        sof: Optional[bytes] = None,
-        eof: Optional[bytes] = None,
+        sof: bytes | None = None,
+        eof: bytes | None = None,
         on_close=None,
     ):
         self.channel = channel
@@ -169,7 +168,7 @@ class ChannelFile(RawIOBase):
 
         return data
 
-    def readinto(self, b: Union[memoryview, bytearray]):
+    def readinto(self, b: memoryview | bytearray):
         """Read as much data as possible into the given bytearray or memory view.
 
         :param b: the buffer data into
@@ -346,7 +345,7 @@ class Channel(ABC):
         return self.send(data + end)
 
     @abstractmethod
-    def recv(self, count: Optional[int] = None) -> bytes:
+    def recv(self, count: int | None = None) -> bytes:
         """Receive data from the remote shell
 
         If your channel class does not implement ``peek``, a default
@@ -368,7 +367,7 @@ class Channel(ABC):
             if data is None or len(data) == 0:
                 break
 
-    def recvuntil(self, needle: bytes, timeout: Optional[float] = None) -> bytes:
+    def recvuntil(self, needle: bytes, timeout: float | None = None) -> bytes:
         """Receive data until the specified string of bytes is found
         is found. The needle is not stripped from the data. This is a
         default implementation which utilizes the ``recv`` method.
@@ -403,7 +402,7 @@ class Channel(ABC):
 
         return data
 
-    def recvline(self, timeout: Optional[float] = None) -> bytes:
+    def recvline(self, timeout: float | None = None) -> bytes:
         """Receive data until a newline is received. The newline
         is not stripped. This is a default implementation that
         utilizes the ``recvuntil`` method.
@@ -415,7 +414,7 @@ class Channel(ABC):
 
         return self.recvuntil(b"\n", timeout=timeout)
 
-    def peek(self, count: Optional[int] = None, timeout: Optional[float] = None):
+    def peek(self, count: int | None = None, timeout: float | None = None):
         """Receive data from the victim and leave the data in the recv
         buffer. This is a default implementation which uses an internal
         ``bytes`` buffer within the channel to simulate a peek. You can
@@ -485,8 +484,8 @@ class Channel(ABC):
         self,
         mode: str,
         bufsize: int = -1,
-        sof: Optional[bytes] = None,
-        eof: Optional[bytes] = None,
+        sof: bytes | None = None,
+        eof: bytes | None = None,
     ):
         """
         Create a file-like object which acts on this channel. If the mode is
@@ -516,8 +515,7 @@ class Channel(ABC):
 
         if mode == "r":
             return BufferedReader(raw_io, buffer_size=bufsize)
-        else:
-            return SafeBufferedWriter(raw_io, buffer_size=bufsize)
+        return SafeBufferedWriter(raw_io, buffer_size=bufsize)
 
     def recvinto(self, b):
         raise NotImplementedError
@@ -562,7 +560,7 @@ def find(name: str) -> type[Channel]:
     return CHANNEL_TYPES[name]
 
 
-def create(protocol: Optional[str] = None, **kwargs) -> Channel:
+def create(protocol: str | None = None, **kwargs) -> Channel:
     """
     Create a new channel with the class provided by a registered channel
     protocol. Some assumptions are made if the protocol is not specified.

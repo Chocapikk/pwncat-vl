@@ -29,7 +29,7 @@ class Command(CommandDefinition):
     def run(self, manager: "pwncat.manager.Manager", args):
         if args.topic:
             for command in manager.parser.commands:
-                if command.PROG == args.topic:
+                if args.topic == command.PROG:
                     if command.parser is not None:
                         command.parser.print_help()
                     else:
@@ -48,7 +48,7 @@ class Command(CommandDefinition):
                     doc = ""
                 else:
                     doc = textwrap.shorten(
-                        textwrap.dedent(doc).strip().replace("\n", ""), 60
+                        textwrap.dedent(doc).strip().replace("\n", ""), 60,
                     )
 
                 table.add_row(command.PROG, doc)

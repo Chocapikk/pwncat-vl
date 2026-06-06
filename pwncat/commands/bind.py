@@ -32,7 +32,7 @@ class Command(CommandDefinition):
     def run(self, manager, args):
         if args.key is None:
             for key, binding in manager.config.bindings.items():
-                console.print(f" [cyan]{key}[/cyan] = [yellow]{repr(binding)}[/yellow]")
+                console.print(f" [cyan]{key}[/cyan] = [yellow]{binding!r}[/yellow]")
         elif args.key is not None and args.script is None:
             if args.key in manager.config.bindings:
                 del manager.config.bindings[args.key]

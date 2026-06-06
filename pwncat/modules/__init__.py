@@ -34,8 +34,9 @@ Example Module
 
 import inspect
 import functools
-from typing import Any, Callable, Optional
+from typing import Any
 from dataclasses import dataclass
+from collections.abc import Callable
 
 import pwncat
 
@@ -115,7 +116,7 @@ def Bool(value: str):
 
     if value.lower() == "true" or value == "1":
         return True
-    elif value.lower() == "false" or value == "0":
+    if value.lower() == "false" or value == "0":
         return False
 
     raise ValueError(f"invalid boolean value: {value}")
@@ -249,8 +250,7 @@ def run_decorator(real_run):
                     return results[0]
 
                 return results
-            else:
-                return result_object
+            return result_object
         finally:
             session.module_depth -= 1
             session.showing_progress = old_show_progress
@@ -325,7 +325,7 @@ class BaseModule(metaclass=BaseModuleMeta):
     def run(
         self,
         session: "pwncat.manager.Session",
-        progress: Optional[bool] = None,
+        progress: bool | None = None,
         **kwargs,
     ):
         """The run method is called via keyword-arguments with all the

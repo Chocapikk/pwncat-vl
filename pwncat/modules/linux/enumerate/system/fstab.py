@@ -33,12 +33,11 @@ class FstabEntry(Fact):
                 f"[yellow]{rich.markup.escape(self.target)}[/yellow] "
                 f"as [cyan]{rich.markup.escape(self.fstype)}[/cyan]"
             )
-        else:
-            return (
-                f"[blue]{rich.markup.escape(self.spec)}[/blue] [red]available[/red] to "
-                f"mount at [yellow]{rich.markup.escape(self.target)}[/yellow] "
-                f"as [cyan]{rich.markup.escape(self.fstype)}[/cyan]"
-            )
+        return (
+            f"[blue]{rich.markup.escape(self.spec)}[/blue] [red]available[/red] to "
+            f"mount at [yellow]{rich.markup.escape(self.target)}[/yellow] "
+            f"as [cyan]{rich.markup.escape(self.fstype)}[/cyan]"
+        )
 
 
 class Module(EnumerateModule):

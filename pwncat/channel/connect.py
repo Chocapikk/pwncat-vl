@@ -63,7 +63,7 @@ class Connect(Socket):
 
             progress.log(
                 f"connection to "
-                f"[blue]{host}[/blue]:[cyan]{port}[/cyan] [green]established[/green]"
+                f"[blue]{host}[/blue]:[cyan]{port}[/cyan] [green]established[/green]",
             )
 
         super().__init__(client=client, host=host, port=port, **kwargs)

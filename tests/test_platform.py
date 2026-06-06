@@ -30,7 +30,7 @@ def test_platform_run(session):
 
     # Ensure command output works
     output_remote = session.platform.run(
-        ["echo", "hello world"], shell=True, capture_output=True, text=True, check=True
+        ["echo", "hello world"], shell=True, capture_output=True, text=True, check=True,
     )
     assert output_remote.stdout == "hello world\n"
 
@@ -62,7 +62,7 @@ def test_platform_sudo(session):
 
         # We have permission to run `/bin/sh *`, so this should succeed
         proc = session.platform.sudo(
-            "whoami", user="john", shell=True, stdout=subprocess.PIPE, text=True
+            "whoami", user="john", shell=True, stdout=subprocess.PIPE, text=True,
         )
         output = proc.stdout.read().strip()
 
@@ -71,7 +71,7 @@ def test_platform_sudo(session):
 
         # We don't have permission to run a bare `whoami`, so this should fail
         proc = session.platform.sudo(
-            ["whoami"], user="john", shell=False, stdout=subprocess.PIPE, text=True
+            ["whoami"], user="john", shell=False, stdout=subprocess.PIPE, text=True,
         )
         output = proc.stdout.read().strip()
 

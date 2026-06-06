@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import re
-from typing import Optional
 
 import rich.markup
 
@@ -21,7 +20,7 @@ sudo_pattern = re.compile(
     r"""(%?[a-zA-Z][a-zA-Z0-9_]*)\s+([a-zA-Z_][-a-zA-Z0-9_.]*)\s*="""
     r"""(\(\s*[a-zA-Z_][-a-zA-Z0-9_]*(\s*:\s*[a-zA-Z_][a-zA-Z0-9_]*)?(,\ *!?[a-zA-Z_][-a-zA-Z0-9_]*(\s*:\s*[a-zA-Z_][a-zA-Z0-9_]*)?)*\s*\)|[a-zA-Z_]"""
     r"""[a-zA-Z0-9_]*)?\s+((NOPASSWD:\s+)|(SETENV:\s+)|(sha[0-9]{1,3}:"""
-    r"""[-a-zA-Z0-9_]+\s+))*(.*)"""
+    r"""[-a-zA-Z0-9_]+\s+))*(.*)""",
 )
 
 directives = ["Defaults", "User_Alias", "Runas_Alias", "Host_Alias", "Cmnd_Alias"]
@@ -33,11 +32,11 @@ class SudoSpec(Fact):
         source,
         line: str,
         matched: bool = False,
-        user: Optional[str] = None,
-        group: Optional[str] = None,
-        host: Optional[str] = None,
-        runas_user: Optional[str] = None,
-        runas_group: Optional[str] = None,
+        user: str | None = None,
+        group: str | None = None,
+        host: str | None = None,
+        runas_user: str | None = None,
+        runas_group: str | None = None,
         options: list[str] = None,
         hash: str = None,
         commands: list[str] = None,
@@ -49,15 +48,15 @@ class SudoSpec(Fact):
         self.matched: bool = matched
         """ The regular expression match data. If this is None, all following fields
         are invalid and should not be used. """
-        self.user: Optional[str] = user
+        self.user: str | None = user
         """ The user which this rule applies to. This is None if a group was specified """
-        self.group: Optional[str] = group
+        self.group: str | None = group
         """ The group this rule applies to. This is None if a user was specified. """
-        self.host: Optional[str] = host
+        self.host: str | None = host
         """ The host this rule applies to """
-        self.runas_user: Optional[str] = runas_user
+        self.runas_user: str | None = runas_user
         """ The user we are allowed to run as """
-        self.runas_group: Optional[str] = runas_group
+        self.runas_group: str | None = runas_group
         """ The GID we are allowed to run as (may be None)"""
         self.options: list[str] = options
         """ A list of options specified (e.g. NOPASSWD, SETENV, etc) """
@@ -240,7 +239,7 @@ class Module(EnumerateModule):
                                 user=runas_user.name,
                             )
                             for method in session.platform.gtfo.iter_sudo(
-                                spec, stream=Stream.RAW
+                                spec, stream=Stream.RAW,
                             )
                         )
 
@@ -308,6 +307,6 @@ class Module(EnumerateModule):
                         source_uid=current_user.id,
                     )
                     for method in session.platform.gtfo.iter_sudo(
-                        spec, stream=Stream.RAW
+                        spec, stream=Stream.RAW,
                     )
                 )

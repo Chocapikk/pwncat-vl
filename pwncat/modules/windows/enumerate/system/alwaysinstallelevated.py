@@ -40,12 +40,12 @@ class Module(EnumerateModule):
         for registry_key in registry_keys:
             try:
                 result = session.platform.powershell(
-                    f"Get-ItemPropertyValue {registry_key} -Name {registry_value}"
+                    f"Get-ItemPropertyValue {registry_key} -Name {registry_value}",
                 )
 
                 if not result:
                     raise ModuleFailed(
-                        f"failed to retrieve registry value {registry_value}"
+                        f"failed to retrieve registry value {registry_value}",
                     )
 
                 status = bool(result[0])
@@ -55,7 +55,7 @@ class Module(EnumerateModule):
                     status = bool(0)  # default
                 else:
                     raise ModuleFailed(
-                        f"could not retrieve registry value {registry_value}: {exc}"
+                        f"could not retrieve registry value {registry_value}: {exc}",
                     ) from exc
 
             if registry_key.startswith("HKCU"):

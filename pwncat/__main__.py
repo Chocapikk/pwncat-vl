@@ -22,10 +22,10 @@ def main():
     logging.getLogger().setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser(
-        description="""Start interactive pwncat session and optionally connect to existing victim via a known platform and channel type. This entrypoint can also be used to list known implants on previous targets."""
+        description="""Start interactive pwncat session and optionally connect to existing victim via a known platform and channel type. This entrypoint can also be used to list known implants on previous targets.""",
     )
     parser.add_argument(
-        "--version", "-v", action="store_true", help="Show version number and exit"
+        "--version", "-v", action="store_true", help="Show version number and exit",
     )
     parser.add_argument(
         "--download-plugins",
@@ -114,7 +114,7 @@ def main():
         if args.download_plugins:
             for plugin_info in pwncat.platform.Windows.PLUGIN_INFO:
                 with pwncat.platform.Windows.open_plugin(
-                    manager, plugin_info.provides[0]
+                    manager, plugin_info.provides[0],
                 ):
                     pass
 
@@ -189,7 +189,7 @@ def main():
                     if not hasattr(paramiko, "load_private_key"):
                         console.log(
                             "[red]error[/red]: incompatible paramiko detected; "
-                            "install [blue]paramiko-ng[/blue] instead of [blue]paramiko[/blue]"
+                            "install [blue]paramiko-ng[/blue] instead of [blue]paramiko[/blue]",
                         )
                         return
                 except ImportError:
@@ -229,17 +229,17 @@ def main():
 
             if query_args["protocol"] is not None and args.listen:
                 console.log(
-                    "[red]error[/red]: --listen is not compatible with an explicit connection string"
+                    "[red]error[/red]: --listen is not compatible with an explicit connection string",
                 )
                 return
-            elif args.listen:
+            if args.listen:
                 query_args["protocol"] = "bind"
 
             if (
                 query_args["certfile"] is None and query_args["keyfile"] is not None
             ) or (query_args["certfile"] is not None and query_args["keyfile"] is None):
                 console.log(
-                    "[red]error[/red]: both a ssl certificate and key file are required"
+                    "[red]error[/red]: both a ssl certificate and key file are required",
                 )
                 return
 
@@ -252,10 +252,10 @@ def main():
                 "connect",
             ] and query_args.get("ssl"):
                 console.log(
-                    f"[red]error[/red]: --ssl is incompatible with an [yellow]{query_args['protocol']}[/yellow] protocol"
+                    f"[red]error[/red]: --ssl is incompatible with an [yellow]{query_args['protocol']}[/yellow] protocol",
                 )
                 return
-            elif query_args["protocol"] is not None and query_args.get("ssl"):
+            if query_args["protocol"] is not None and query_args.get("ssl"):
                 query_args["protocol"] = "ssl-" + query_args["protocol"]
 
             if (
@@ -264,7 +264,7 @@ def main():
                         query_args["port"] is not None,
                         args.port is not None,
                         args.pos_port is not None,
-                    ]
+                    ],
                 )
                 > 1
             ):
@@ -281,7 +281,7 @@ def main():
                     query_args["port"] = int(query_args["port"].lstrip(":"))
                 except ValueError:
                     console.log(
-                        f"[red]error[/red]: {query_args['port'].lstrip(':')}: invalid port number"
+                        f"[red]error[/red]: {query_args['port'].lstrip(':')}: invalid port number",
                     )
                     return
 
@@ -343,7 +343,7 @@ def main():
 
             if manager.target is not None:
                 manager.target.log(
-                    f"connected via {used_implant.title(manager.target)}"
+                    f"connected via {used_implant.title(manager.target)}",
                 )
             else:
                 try:
@@ -376,7 +376,7 @@ def main():
                 # Close each session based on its ``session_id``
                 for session_id in session_ids:
                     progress.update(
-                        task, status=str(manager.sessions[session_id].platform)
+                        task, status=str(manager.sessions[session_id].platform),
                     )
                     manager.sessions[session_id].close()
 

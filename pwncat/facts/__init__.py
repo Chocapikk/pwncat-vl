@@ -8,7 +8,7 @@ when interacting with data returned by an enumeration module.
 import time
 import subprocess
 from io import StringIO
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import rich.markup
 from persistent.list import PersistentList
@@ -145,11 +145,11 @@ class Group(Fact):
                 user = session.find_group(gid=uid)
 
             if user is None:
-                members.append(f"UID({repr(uid)})")
+                members.append(f"UID({uid!r})")
             else:
                 members.append(user.name)
 
-        return f"""Group(gid={repr(self.id)}, name={repr(self.name)}, members={repr(members)})"""
+        return f"""Group(gid={self.id!r}, name={self.name!r}, members={members!r})"""
 
 
 class User(Fact):
@@ -174,23 +174,22 @@ class User(Fact):
         source: str,
         name,
         uid,
-        password: Optional[str] = None,
-        hash: Optional[str] = None,
+        password: str | None = None,
+        hash: str | None = None,
     ):
         super().__init__(["user"], source)
 
         self.name: str = name
         self.id = uid
-        self.password: Optional[str] = None
-        self.hash: Optional[str] = None
+        self.password: str | None = None
+        self.hash: str | None = None
 
     def __repr__(self):
         if self.password is None and self.hash is None:
-            return f"""User(uid={self.id}, name={repr(self.name)})"""
-        elif self.password is not None:
-            return f"""User(uid={repr(self.id)}, name={repr(self.name)}, password={repr(self.password)})"""
-        else:
-            return f"""User(uid={repr(self.id)}, name={repr(self.name)}, hash={repr(self.hash)})"""
+            return f"""User(uid={self.id}, name={self.name!r})"""
+        if self.password is not None:
+            return f"""User(uid={self.id!r}, name={self.name!r}, password={self.password!r})"""
+        return f"""User(uid={self.id!r}, name={self.name!r}, hash={self.hash!r})"""
 
 
 class PotentialPassword(Fact):
@@ -332,7 +331,7 @@ class PrivateKey(Implant):
             self.types.remove("implant.remote")
             session.db.transaction_manager.commit()
             raise ModuleFailed(
-                f"ssh to localhost failed w/ exit code {proc.returncode}"
+                f"ssh to localhost failed w/ exit code {proc.returncode}",
             )
 
         # Detach the popen object
@@ -341,7 +340,7 @@ class PrivateKey(Implant):
         return lambda session: session.platform.channel.send(b"exit\n")
 
     def trigger(
-        self, manager: "pwncat.manager.Manager", target: "pwncat.target.Target"
+        self, manager: "pwncat.manager.Manager", target: "pwncat.target.Target",
     ):
         """Connect remotely to this target with the specified user and key"""
 
@@ -366,7 +365,7 @@ class PrivateKey(Implant):
             )
         except (ChannelError, PlatformError) as exc:
             manager.log(
-                f"[yellow]warning[/yellow]: {self.source} implant failed; removing implant types."
+                f"[yellow]warning[/yellow]: {self.source} implant failed; removing implant types.",
             )
             self.authorized = False
             self.types.remove("implant.remote")
@@ -393,7 +392,7 @@ class EscalationReplace(Fact):
         self.uid = uid
 
     def escalate(
-        self, session: "pwncat.manager.Session"
+        self, session: "pwncat.manager.Session",
     ) -> Callable[["pwncat.manager.Session"], None]:
         """Execute the escalation optionally returning a new session
 

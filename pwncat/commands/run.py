@@ -25,10 +25,10 @@ class Command(CommandDefinition):
     PROG = "run"
     ARGS = {
         "--raw,-r": Parameter(
-            Complete.NONE, action="store_true", help="Display raw results unformatted"
+            Complete.NONE, action="store_true", help="Display raw results unformatted",
         ),
         "--traceback,-t": Parameter(
-            Complete.NONE, action="store_true", help="Show traceback for module errors"
+            Complete.NONE, action="store_true", help="Show traceback for module errors",
         ),
         "module": Parameter(
             Complete.CHOICES,
@@ -47,7 +47,7 @@ class Command(CommandDefinition):
         if args.module is None and manager.config.module is None:
             console.log("[red]error[/red]: no module specified")
             return
-        elif args.module is None:
+        if args.module is None:
             module_name = manager.config.module.name
 
         # Parse key=value pairs
@@ -117,7 +117,7 @@ class Command(CommandDefinition):
         # Organize results by category
         for result in results:
             if isinstance(result, pwncat.modules.Result) and result.is_long_form(
-                manager.target
+                manager.target,
             ):
                 longform.append(result)
             elif (
@@ -150,6 +150,6 @@ class Command(CommandDefinition):
                     console.print(f"[bold]{result.title(manager.target)}[/bold]")
                 else:
                     console.print(
-                        f"[bold]{result.category(manager.target)} - {result.title(manager.target)}[/bold]"
+                        f"[bold]{result.category(manager.target)} - {result.title(manager.target)}[/bold]",
                     )
                 console.print(textwrap.indent(result.description(manager.target), "  "))

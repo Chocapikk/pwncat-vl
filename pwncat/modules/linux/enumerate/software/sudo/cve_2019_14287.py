@@ -68,7 +68,7 @@ class Module(EnumerateModule):
             if "ALL" in userlist and "!root" in userlist:
                 for command in rule.commands:
                     for method in session.platform.gtfo.iter_sudo(
-                        command, caps=Capability.ALL, stream=Stream.RAW
+                        command, caps=Capability.ALL, stream=Stream.RAW,
                     ):
                         # Build a generic GTFObins capability
                         yield build_gtfo_ability(

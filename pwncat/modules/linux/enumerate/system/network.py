@@ -35,7 +35,7 @@ class Module(EnumerateModule):
         for cmd in [["ip", "-c=never", "addr"], ["ip", "addr"]]:
             try:
                 output = session.platform.run(
-                    cmd, capture_output=True, text=True
+                    cmd, capture_output=True, text=True,
                 )
                 if output.stdout and output.stdout.strip():
                     break

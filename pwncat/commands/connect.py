@@ -65,10 +65,10 @@ class Command(CommandDefinition):
             help="Certificate for SSL-encrypted listeners (PEM)",
         ),
         "--ssl-key": Parameter(
-            Complete.LOCAL_FILE, help="Key for SSL-encrypted listeners (PEM)"
+            Complete.LOCAL_FILE, help="Key for SSL-encrypted listeners (PEM)",
         ),
         "--ssl": Parameter(
-            Complete.NONE, action="store_true", help="Connect or listen with SSL"
+            Complete.NONE, action="store_true", help="Connect or listen with SSL",
         ),
         "connection_string": Parameter(
             Complete.NONE,
@@ -85,7 +85,7 @@ class Command(CommandDefinition):
     }
     LOCAL = True
     CONNECTION_PATTERN = re.compile(
-        r"""^(?P<protocol>[-a-zA-Z0-9_]*://)?((?P<user>[^:@]*)?(?P<password>:.*)?@)?(?P<host>[^:]*)?(?P<port>:[0-9]*)?(\?(?P<querystring>.*))?$"""
+        r"""^(?P<protocol>[-a-zA-Z0-9_]*://)?((?P<user>[^:@]*)?(?P<password>:.*)?@)?(?P<host>[^:]*)?(?P<port>:[0-9]*)?(\?(?P<querystring>.*))?$""",
     )
 
     def run(self, manager: "pwncat.manager.Manager", args):
@@ -178,17 +178,17 @@ class Command(CommandDefinition):
 
         if query_args["protocol"] is not None and args.listen:
             console.log(
-                "[red]error[/red]: --listen is not compatible with an explicit connection string"
+                "[red]error[/red]: --listen is not compatible with an explicit connection string",
             )
             return
-        elif args.listen:
+        if args.listen:
             query_args["protocol"] = "bind"
 
         if (query_args["certfile"] is None and query_args["keyfile"] is not None) or (
             query_args["certfile"] is not None and query_args["keyfile"] is None
         ):
             console.log(
-                "[red]error[/red]: both a ssl certificate and key file are required"
+                "[red]error[/red]: both a ssl certificate and key file are required",
             )
             return
 
@@ -196,13 +196,13 @@ class Command(CommandDefinition):
             query_args["ssl"] = True
 
         if query_args["protocol"] not in [None, "bind", "connect"] and query_args.get(
-            "ssl"
+            "ssl",
         ):
             console.log(
-                f"[red]error[/red]: --ssl is incompatible with an [yellow]{query_args['protocol']}[/yellow] protocol"
+                f"[red]error[/red]: --ssl is incompatible with an [yellow]{query_args['protocol']}[/yellow] protocol",
             )
             return
-        elif query_args["protocol"] is not None and query_args.get("ssl"):
+        if query_args["protocol"] is not None and query_args.get("ssl"):
             query_args["protocol"] = "ssl-" + query_args["protocol"]
 
         if (
@@ -211,7 +211,7 @@ class Command(CommandDefinition):
                     query_args["port"] is not None,
                     args.port is not None,
                     args.pos_port is not None,
-                ]
+                ],
             )
             > 1
         ):
@@ -228,7 +228,7 @@ class Command(CommandDefinition):
                 query_args["port"] = int(query_args["port"].lstrip(":"))
             except ValueError:
                 console.log(
-                    f"[red]error[/red]: {query_args['port'].lstrip(':')}: invalid port number"
+                    f"[red]error[/red]: {query_args['port'].lstrip(':')}: invalid port number",
                 )
                 return
 

@@ -51,7 +51,7 @@ class Module(EnumerateModule):
 
         try:
             result = session.platform.run(
-                ["pkexec", "--version"], capture_output=True, check=True
+                ["pkexec", "--version"], capture_output=True, check=True,
             )
         except CalledProcessError:
             return

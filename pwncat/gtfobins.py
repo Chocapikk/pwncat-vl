@@ -11,8 +11,8 @@ import os
 import json
 import shlex
 from enum import Flag, auto
-from typing import IO, Any, BinaryIO, Callable
-from collections.abc import Generator
+from typing import IO, Any, BinaryIO
+from collections.abc import Callable, Generator
 
 
 class ControlCodes:
@@ -89,7 +89,7 @@ class Method:
         self.binary = binary
         self.payload = data.get("payload", "{command}")
         self.args = data.get("args", [])
-        self.suid = data.get("suid", None)
+        self.suid = data.get("suid")
         self.input = data.get("input", "")
         self.exit = data.get("exit", "")
         self.restricted = data.get("restricted", [])
@@ -137,7 +137,7 @@ class Method:
                 raise SudoNotPossible
 
         # Check if we already have the parameters we need
-        needed = {k: False for k in self.args}
+        needed = dict.fromkeys(self.args, False)
         for arg in args:
             if arg in needed:
                 needed[arg] = True
@@ -185,7 +185,7 @@ class Method:
                 args = self.suid
             else:
                 args = []
-            args += self.args if self.args else []
+            args += self.args or []
             command = " ".join([binary_path, *args])
             # Resolve variables in the command/args
             command = gtfo.resolve_binaries(
@@ -240,11 +240,10 @@ class MethodWrapper:
 
         if self.stream is Stream.RAW or self.stream is Stream.PRINT:
             return pipe
-        else:
-            # NOTE: we should remove these from gtfobins.json
-            raise RuntimeError(
-                f"{self.stream.name}: non raw or print streams are no longer supported"
-            )
+        # NOTE: we should remove these from gtfobins.json
+        raise RuntimeError(
+            f"{self.stream.name}: non raw or print streams are no longer supported",
+        )
 
     def build(self, gtfo: "GTFOBins", **kwargs) -> tuple[str, str, str]:
         """Build the payload for this method and binary path. Depending on
@@ -327,7 +326,7 @@ class Binary:
             self.caps |= method_cap
 
     def iter_methods(
-        self, binary_path: str, caps: Capability, stream: Stream, spec: str = None
+        self, binary_path: str, caps: Capability, stream: Stream, spec: str = None,
     ):
         """Iterate over methods in this binary matching the capability and stream
         masks"""
@@ -413,7 +412,7 @@ class GTFOBins:
             binary_path = shlex.split(spec.rstrip("*"))[0]
 
             yield from self.iter_binary(
-                binary_path, caps, stream, spec=spec, **kwargs
+                binary_path, caps, stream, spec=spec, **kwargs,
             )
         else:
             # We can run any w/ this spec. This becomes the same as calling
@@ -451,7 +450,7 @@ class GTFOBins:
             return
 
         yield from self.binaries[binary_name].iter_methods(
-            binary_path, caps, stream, spec
+            binary_path, caps, stream, spec,
         )
 
     def iter_methods(

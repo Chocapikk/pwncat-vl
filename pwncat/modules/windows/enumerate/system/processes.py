@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from typing import Optional
 
 import rich.markup
 
@@ -18,7 +17,7 @@ class ProcessData(Fact):
         source: str,
         name: str,
         pid: int,
-        session: Optional[int],
+        session: int | None,
         owner: str,
         state: int,
         path: str,
@@ -63,7 +62,7 @@ class ProcessData(Fact):
 
         try:
             result = session.platform.powershell(
-                f"(Get-Process -Id {self.pid}).WaitForExit({timeout})"
+                f"(Get-Process -Id {self.pid}).WaitForExit({timeout})",
             )
             if not result or not result[0]:
                 raise TimeoutError(self)
@@ -91,7 +90,7 @@ class ProcessData(Fact):
             if owner is None:
                 owner = session.find_group(gid=self.owner)
             if owner is None:
-                owner = f"SID({repr(self.owner)})"
+                owner = f"SID({self.owner!r})"
             else:
                 owner = owner.name
 

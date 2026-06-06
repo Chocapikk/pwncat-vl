@@ -53,14 +53,14 @@ class AppendPasswd(EscalationReplace):
                         backdoor_user,
                         backdoor_pass,
                         new_line,
-                    )
+                    ),
                 )
             except (FileNotFoundError, PermissionError):
                 raise ModuleFailed("failed to write /etc/passwd")
 
         else:
             console.log(
-                f"[cyan]{backdoor_user}[/cyan] already exists; attempting authentication"
+                f"[cyan]{backdoor_user}[/cyan] already exists; attempting authentication",
             )
 
         try:

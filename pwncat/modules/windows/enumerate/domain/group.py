@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict, List, Optional
 
 import pwncat
 from pwncat.modules import Status
@@ -11,7 +10,7 @@ from pwncat.modules.enumerate import Schedule, EnumerateModule
 class DomainGroup(WindowsGroup):
     """Builds on Windows Groups to add domain specific information"""
 
-    def __init__(self, source: str, domain: str, data: Dict, members: List[str]):
+    def __init__(self, source: str, domain: str, data: dict, members: list[str]):
         super().__init__(
             source=source,
             name=data["samaccountname"],
@@ -26,9 +25,9 @@ class DomainGroup(WindowsGroup):
 
         self.grouptype: int = data.get("grouptype") or 0
         self.samaccounttype: int = data.get("samaccounttype") or 0
-        self.objectclass: List[str] = data.get("objectclass") or []
+        self.objectclass: list[str] = data.get("objectclass") or []
         self.cn: str = data.get("cn") or None
-        self.distinguishedname: Optional[str] = data.get("distinguishedname") or None
+        self.distinguishedname: str | None = data.get("distinguishedname") or None
         self.objectcategory: str = data.get("objectcategory")
 
     def title(self, session: "pwncat.manager.Session"):
@@ -40,11 +39,11 @@ class DomainGroup(WindowsGroup):
                 user = session.find_group(gid=uid)
 
             if user is None:
-                members.append(f"UID({repr(uid)})")
+                members.append(f"UID({uid!r})")
             else:
                 members.append(user.name)
 
-        return f"""DomainGroup(gid={repr(self.id)}, name={repr(self.name)}, domain={repr(self.domain)}, members={repr(members)})"""
+        return f"""DomainGroup(gid={self.id!r}, name={self.name!r}, domain={self.domain!r}, members={members!r})"""
 
 
 class Module(EnumerateModule):
@@ -85,10 +84,10 @@ class Module(EnumerateModule):
 
             try:
                 yield Status(
-                    f"[cyan]{group['samaccountname']}[/cyan]: requesting members"
+                    f"[cyan]{group['samaccountname']}[/cyan]: requesting members",
                 )
                 members = session.platform.powershell(
-                    f"Get-DomainGroupMember \"{group['samaccountname']}\""
+                    f"Get-DomainGroupMember \"{group['samaccountname']}\"",
                 )[0]
 
                 if isinstance(members, dict):
@@ -100,5 +99,5 @@ class Module(EnumerateModule):
             members = [member["MemberSID"] for member in members]
 
             yield DomainGroup(
-                self.name, domain=domain["Name"], data=group, members=members
+                self.name, domain=domain["Name"], data=group, members=members,
             )

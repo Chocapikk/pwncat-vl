@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict
 
 import pwncat
 from pwncat.db import Fact
@@ -9,7 +8,7 @@ from pwncat.modules.enumerate import Schedule, EnumerateModule
 
 
 class SiteObject(Fact):
-    def __init__(self, source: str, data: Dict):
+    def __init__(self, source: str, data: dict):
         super().__init__(source=source, types=["domain.site"])
 
         self.site = data

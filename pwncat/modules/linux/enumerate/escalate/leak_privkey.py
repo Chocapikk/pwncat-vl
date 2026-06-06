@@ -49,33 +49,33 @@ class Module(EnumerateModule):
                         privkey = filp.read()
                 except (ModuleFailed, FileNotFoundError, PermissionError):
                     yield Status(
-                        f"leaking key for [blue]{user.name}[/blue] [red]failed[/red]"
+                        f"leaking key for [blue]{user.name}[/blue] [red]failed[/red]",
                     )
                     continue
 
                 try:
                     with ability.open(
-                        session, str(ssh_path / "id_rsa.pub"), "r"
+                        session, str(ssh_path / "id_rsa.pub"), "r",
                     ) as filp:
                         pubkey = filp.read()
                     if pubkey.strip() == "":
                         pubkey = None
                 except (ModuleFailed, FileNotFoundError, PermissionError):
                     yield Status(
-                        f"leaking pubkey [red]failed[/red] for [blue]{user.name}[/blue]"
+                        f"leaking pubkey [red]failed[/red] for [blue]{user.name}[/blue]",
                     )
 
                 if pubkey is not None and pubkey != "":
                     try:
                         with ability.open(
-                            session, str(ssh_path / "authorized_keys"), "r"
+                            session, str(ssh_path / "authorized_keys"), "r",
                         ) as filp:
                             authkeys = filp.read()
                         if authkeys.strip() == "":
                             authkeys = None
                     except (ModuleFailed, FileNotFoundError, PermissionError):
                         yield Status(
-                            f"leaking authorized keys [red]failed[/red] for [blue]{user.name}[/blue]"
+                            f"leaking authorized keys [red]failed[/red] for [blue]{user.name}[/blue]",
                         )
 
                 if pubkey is not None and authkeys is not None:

@@ -22,7 +22,7 @@ class Command(CommandDefinition):
             metavar="MODULE",
             help="The module to view information on",
             nargs="?",
-        )
+        ),
     }
 
     def run(self, manager: "pwncat.manager.Manager", args):
@@ -43,14 +43,14 @@ class Command(CommandDefinition):
             module_name = module.name.removeprefix("agnostic.")
             if self.manager.target is not None:
                 module_name = module_name.removeprefix(
-                    self.manager.target.platform.name + "."
+                    self.manager.target.platform.name + ".",
                 )
 
         console.print(
-            f"[bold underline]Module [cyan]{module_name}[/cyan][/bold underline]"
+            f"[bold underline]Module [cyan]{module_name}[/cyan][/bold underline]",
         )
         console.print(
-            textwrap.indent(textwrap.dedent(module.__doc__.strip("\n")), " ") + "\n"
+            textwrap.indent(textwrap.dedent(module.__doc__.strip("\n")), " ") + "\n",
         )
 
         table = Table("Argument", "Default", "Help", box=box.SIMPLE)

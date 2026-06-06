@@ -41,7 +41,7 @@ class Command(CommandDefinition):
             help="the variable name to modify",
         ),
         "value": Parameter(
-            Complete.LOCAL_FILE, nargs="?", help="the value for the given variable"
+            Complete.LOCAL_FILE, nargs="?", help="the value for the given variable",
         ),
     }
     LOCAL = True
@@ -49,16 +49,16 @@ class Command(CommandDefinition):
     def run(self, manager, args):
         if args.password and manager.target is None:
             manager.log(
-                "[red]error[/red]: active target is required for user interaction"
+                "[red]error[/red]: active target is required for user interaction",
             )
             return
-        elif args.password:
+        if args.password:
             if args.variable is None:
                 found = False
                 for user in manager.target.run("enumerate", types=["user"]):
                     if user.password is not None:
                         console.print(
-                            f" - [green]{user.name}[/green] -> [red]{repr(user.password)}[/red]"
+                            f" - [green]{user.name}[/green] -> [red]{user.password!r}[/red]",
                         )
                         found = True
                 if not found:
@@ -67,11 +67,11 @@ class Command(CommandDefinition):
                 user = manager.target.find_user(name=args.variable)
                 if user is None:
                     manager.target.log(
-                        "[red]error[/red]: {args.variable}: user not found"
+                        "[red]error[/red]: {args.variable}: user not found",
                     )
                     return
                 console.print(
-                    f" - [green]{args.variable}[/green] -> [red]{repr(args.value)}[/red]"
+                    f" - [green]{args.variable}[/green] -> [red]{args.value!r}[/red]",
                 )
                 user.password = args.value
                 manager.target.db.transaction_manager.commit()
@@ -82,11 +82,11 @@ class Command(CommandDefinition):
                         raise ValueError("cannot change database with running session")
                     if args.variable in manager.config:
                         manager.config.set(
-                            args.variable, args.value, getattr(args, "global")
+                            args.variable, args.value, getattr(args, "global"),
                         )
                     else:
                         console.log(
-                            f"[red]error[/red]: invalid choice {repr(args.variable)}"
+                            f"[red]error[/red]: invalid choice {args.variable!r}",
                         )
                     if args.variable == "db":
                         # Ensure the database is re-opened, if it was already
@@ -103,15 +103,15 @@ class Command(CommandDefinition):
                 if args.variable in manager.config:
                     value = manager.config[args.variable]
                     console.print(
-                        f" [cyan]{args.variable}[/cyan] = [yellow]{repr(value)}[/yellow]"
+                        f" [cyan]{args.variable}[/cyan] = [yellow]{value!r}[/yellow]",
                     )
                 else:
                     console.log(
-                        f"[red]error[/red]: invalid choice {repr(args.variable)}"
+                        f"[red]error[/red]: invalid choice {args.variable!r}",
                     )
             else:
                 for name in manager.config:
                     value = manager.config[name]
                     console.print(
-                        f" [cyan]{name}[/cyan] = [yellow]{repr(value)}[/yellow]"
+                        f" [cyan]{name}[/cyan] = [yellow]{value!r}[/yellow]",
                     )

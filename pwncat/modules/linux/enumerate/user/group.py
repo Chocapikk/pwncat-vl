@@ -36,7 +36,7 @@ class Module(EnumerateModule):
 
                         # Build a group object
                         groups.append(
-                            LinuxGroup(self.name, group_name, hash, gid, members)
+                            LinuxGroup(self.name, group_name, hash, gid, members),
                         )
 
                         yield Status(group_name)

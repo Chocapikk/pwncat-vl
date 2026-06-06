@@ -19,12 +19,12 @@ class Module(BaseModule):
         for tamper in session.run("enumerate", types=["tamper"]):
             if not tamper.revertable:
                 session.log(
-                    f"[yellow]warning[/yellow]: {tamper.title(session)}: not revertable"
+                    f"[yellow]warning[/yellow]: {tamper.title(session)}: not revertable",
                 )
                 continue
             if current_user.id != tamper.uid:
                 session.log(
-                    f"[yellow]warning[/yellow]: {tamper.title(session)}: incorrect uid to revert"
+                    f"[yellow]warning[/yellow]: {tamper.title(session)}: incorrect uid to revert",
                 )
                 continue
 

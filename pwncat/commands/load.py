@@ -21,7 +21,7 @@ class Command(CommandDefinition):
             Complete.LOCAL_FILE,
             help="Path to a python package directory to load modules from",
             nargs="+",
-        )
+        ),
     }
     DEFAULTS = {}
     LOCAL = True

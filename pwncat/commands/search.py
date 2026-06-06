@@ -19,7 +19,7 @@ class Command(CommandDefinition):
         "module": Parameter(
             Complete.NONE,
             help="glob pattern",
-        )
+        ),
     }
 
     def run(self, manager: "pwncat.manager.Manager", args):
@@ -47,13 +47,13 @@ class Command(CommandDefinition):
 
             if self.manager.target is not None:
                 module_name = module_name.removeprefix(
-                    self.manager.target.platform.name + "."
+                    self.manager.target.platform.name + ".",
                 )
 
             table.add_row(
                 f"[cyan]{module_name}[/cyan]",
                 textwrap.shorten(
-                    description.replace("\n", " "), width=80, placeholder="..."
+                    description.replace("\n", " "), width=80, placeholder="...",
                 ),
             )
 

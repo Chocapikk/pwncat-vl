@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from typing import Dict
 
 from pwncat.db import Fact
 from pwncat.modules import ModuleFailed
@@ -9,7 +8,7 @@ from pwncat.modules.enumerate import EnumerateModule
 
 
 class UACData(Fact):
-    def __init__(self, source, registry_values: Dict):
+    def __init__(self, source, registry_values: dict):
         super().__init__(source=source, types=["protections.uac"])
 
         self.registry_values: bool = registry_values
@@ -30,51 +29,51 @@ class UACData(Fact):
             consent_prompt = self.registry_values["ConsentPromptBehaviorAdmin"]
             if consent_prompt == 0:
                 output.append(
-                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [bold green]UAC will not prompt[/bold green]"
+                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [bold green]UAC will not prompt[/bold green]",
                 )
             if consent_prompt == 1 or consent_prompt == 3:
                 output.append(
-                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [red]admin is asked for [bold]credentials[/bold][/red]"
+                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [red]admin is asked for [bold]credentials[/bold][/red]",
                 )
             if consent_prompt == 2 or consent_prompt == 4:
                 output.append(
-                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [red]admin is asked for [bold]confirmation[/bold][/red]"
+                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt}: [red]admin is asked for [bold]confirmation[/bold][/red]",
                 )
             if consent_prompt == 5:
                 output.append(
-                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt} (default): [red]admin is asked for [bold]confirmation[/bold][/red]"
+                    f"'ConsentPromptBehaviorAdmin' = {consent_prompt} (default): [red]admin is asked for [bold]confirmation[/bold][/red]",
                 )
 
             local_account = self.registry_values["LocalAccountTokenFilterPolicy"]
             if not local_account:
                 output.append(
-                    f"'LocalAccountTokenFilterPolicy' = {local_account} (default): [red]only the built-in admin can perform admin tasks without UAC[/red]"
+                    f"'LocalAccountTokenFilterPolicy' = {local_account} (default): [red]only the built-in admin can perform admin tasks without UAC[/red]",
                 )
             else:
                 output.append(
-                    f"'LocalAccountTokenFilterPolicy' = {local_account}: [yellow]all accounts in the Administrators group can perform admin tasks without UAC[/yellow]"
+                    f"'LocalAccountTokenFilterPolicy' = {local_account}: [yellow]all accounts in the Administrators group can perform admin tasks without UAC[/yellow]",
                 )
 
             filter_token = self.registry_values["FilterAdministratorToken"]
             if not filter_token:
                 output.append(
-                    f"'FilterAdministratorToken' = {local_account} (default): [yellow]the built-in admin [bold]can[/bold] do remote administration[/yellow]"
+                    f"'FilterAdministratorToken' = {local_account} (default): [yellow]the built-in admin [bold]can[/bold] do remote administration[/yellow]",
                 )
             else:
                 if local_account == 1:
                     output.append(
-                        f"'FilterAdministratorToken' = {local_account}: [yellow]the built-in admin [bold]can[/bold] do remote administration since 'LocalAccountTokenFilterPolicy' is {local_account}[/yellow]"
+                        f"'FilterAdministratorToken' = {local_account}: [yellow]the built-in admin [bold]can[/bold] do remote administration since 'LocalAccountTokenFilterPolicy' is {local_account}[/yellow]",
                     )
                 else:
                     output.append(
-                        f"'FilterAdministratorToken' = {local_account}: [red]the built-in admin [bold]cannot[/bold] do remote administration[/red]"
+                        f"'FilterAdministratorToken' = {local_account}: [red]the built-in admin [bold]cannot[/bold] do remote administration[/red]",
                     )
         else:
             return (
                 None  # this is a shortform fact, so it just display only the title line
             )
 
-        return "\n".join((" - " + line for line in output))
+        return "\n".join(" - " + line for line in output)
 
 
 class Module(EnumerateModule):
@@ -102,12 +101,12 @@ class Module(EnumerateModule):
         for registry_value, registry_type in registry_values.items():
             try:
                 result = session.platform.powershell(
-                    f"Get-ItemPropertyValue {registry_key} -Name {registry_value}"
+                    f"Get-ItemPropertyValue {registry_key} -Name {registry_value}",
                 )
 
                 if not result:
                     raise ModuleFailed(
-                        f"failed to retrieve registry value {registry_value}"
+                        f"failed to retrieve registry value {registry_value}",
                     )
 
                 registry_values[registry_value] = registry_type(result[0])
@@ -117,7 +116,7 @@ class Module(EnumerateModule):
                     registry_values[registry_value] = registry_type(0)
                 else:
                     raise ModuleFailed(
-                        f"could not retrieve registry value {registry_value}: {exc}"
+                        f"could not retrieve registry value {registry_value}: {exc}",
                     ) from exc
 
             yield UACData(self.name, registry_values)

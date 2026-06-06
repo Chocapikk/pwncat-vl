@@ -50,7 +50,7 @@ def session_for(request):
 
     # Check if there are manager arguments
     manager_args = getattr(
-        request.node.get_closest_marker("manager_config"), "args", {}
+        request.node.get_closest_marker("manager_config"), "args", {},
     )
     if not manager_args:
         manager_args = {}

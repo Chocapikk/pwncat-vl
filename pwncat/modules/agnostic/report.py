@@ -56,9 +56,9 @@ class Module(BaseModule):
                     [
                         " " + data[r][c] + " " * (widths[c] - len(data[r][c]) + 1)
                         for c in range(len(data[r]))
-                    ]
+                    ],
                 )
-                + "|"
+                + "|",
             )
 
         if headers:

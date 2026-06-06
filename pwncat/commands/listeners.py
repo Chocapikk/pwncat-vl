@@ -24,10 +24,10 @@ class Command(CommandDefinition):
             help="Show all listeners when listing (default: hide stopped)",
         ),
         "--kill,-k": Parameter(
-            Complete.NONE, action="store_true", help="Stop the given listener"
+            Complete.NONE, action="store_true", help="Stop the given listener",
         ),
         "--init,-i": Parameter(
-            Complete.NONE, action="store_true", help="Initialize pending channels"
+            Complete.NONE, action="store_true", help="Initialize pending channels",
         ),
         "id": Parameter(
             Complete.NONE,
@@ -69,7 +69,7 @@ class Command(CommandDefinition):
                             for x in range(len(channels))
                             if channels[x] is not None
                         ],
-                    )
+                    ),
                 )
                 if channels[ident] is None:
                     manager.print("[red]error[/red]: channel already initialized.")
@@ -97,7 +97,6 @@ class Command(CommandDefinition):
                     channels[ident] = None
         except KeyboardInterrupt:
             manager.print("")
-            pass
         finally:
             for channel in channels:
                 if channel is not None:
@@ -163,7 +162,7 @@ class Command(CommandDefinition):
             # Kill the specified listener
             with console.status("stopping listener..."):
                 manager.listeners[args.id].stop()
-            manager.log(f"stopped listener on {str(manager.listeners[args.id])}")
+            manager.log(f"stopped listener on {manager.listeners[args.id]!s}")
             return
 
         if args.init:

@@ -48,10 +48,10 @@ class Module(BaseModule):
         if path.is_file():
             # Load from absolute or CWD path
             return path.name, path.open("rb")
-        elif (Path(session.config["psmodules"]) / path).is_file():
+        if (Path(session.config["psmodules"]) / path).is_file():
             # Load from local modules directory
             return path.name, (Path(session.config["psmodules"]) / path).open("rb")
-        elif len(orig_path.lstrip("/").split("/")) > 2:
+        if len(orig_path.lstrip("/").split("/")) > 2:
             # Load from githubusercontent.com ( path = "user/repo/path/to/file.ps1" )
             orig_path = orig_path.lstrip("/").split("/")
             orig_path.insert(2, "master")
@@ -63,8 +63,7 @@ class Module(BaseModule):
                 raise PSModuleNotFoundError(orig_path)
 
             return (path.name, BytesIO(r.content + b"\n"))
-        else:
-            raise PSModuleNotFoundError(orig_path)
+        raise PSModuleNotFoundError(orig_path)
 
     def run(self, session: "pwncat.manager.Session", path, force):
 

@@ -17,7 +17,7 @@ class Command(CommandDefinition):
             choices=get_module_choices,
             metavar="MODULE",
             help="the module to use",
-        )
+        ),
     }
     LOCAL = False
 

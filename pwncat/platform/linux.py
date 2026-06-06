@@ -23,8 +23,9 @@ import secrets
 import tempfile
 import subprocess
 from io import TextIOWrapper, BufferedIOBase, UnsupportedOperation
-from typing import List, Union, BinaryIO, Optional, Generator
+from typing import BinaryIO
 from subprocess import TimeoutExpired, CalledProcessError
+from collections.abc import Generator
 from importlib.resources import files as _pkg_files
 
 import pwncat
@@ -74,7 +75,7 @@ class PopenLinux(pwncat.subprocess.Popen):
         # We create a stdout pipe regardless. This is how we
         # track whether the process has completed.
         self.stdout_raw = platform.channel.makefile(
-            "r", bufsize=bufsize, sof=start_delim, eof=end_delim
+            "r", bufsize=bufsize, sof=start_delim, eof=end_delim,
         )
 
         if text or encoding is not None or errors is not None:
@@ -93,7 +94,7 @@ class PopenLinux(pwncat.subprocess.Popen):
             self.stdin_raw = platform.channel.makefile("w")
             if text or encoding is not None or errors is not None:
                 self.stdin = TextIOWrapper(
-                    self.stdin_raw, encoding=encoding, errors=errors, write_through=True
+                    self.stdin_raw, encoding=encoding, errors=errors, write_through=True,
                 )
             else:
                 self.stdin = self.stdin_raw
@@ -518,11 +519,7 @@ class LinuxPath(pathlib.PurePosixPath):
         file_gid = self.stat().st_gid
         file_mode = self.stat().st_mode
 
-        if uid == file_uid and (file_mode & stat.S_IRUSR):
-            return True
-        elif (gid == file_gid or file_gid in groups) and (file_mode & stat.S_IRGRP):
-            return True
-        elif file_mode & stat.S_IROTH:
+        if uid == file_uid and (file_mode & stat.S_IRUSR) or (gid == file_gid or file_gid in groups) and (file_mode & stat.S_IRGRP) or file_mode & stat.S_IROTH:
             return True
 
         return False
@@ -537,11 +534,7 @@ class LinuxPath(pathlib.PurePosixPath):
         file_gid = self.stat().st_gid
         file_mode = self.stat().st_mode
 
-        if uid == file_uid and (file_mode & stat.S_IWUSR):
-            return True
-        elif (gid == file_gid or file_gid in groups) and (file_mode & stat.S_IWGRP):
-            return True
-        elif file_mode & stat.S_IWOTH:
+        if uid == file_uid and (file_mode & stat.S_IWUSR) or (gid == file_gid or file_gid in groups) and (file_mode & stat.S_IWGRP) or file_mode & stat.S_IWOTH:
             return True
 
         return False
@@ -583,7 +576,7 @@ class Linux(Platform):
         # Load a GTFOBins database to assist in common operations
         # without relying on specific binaries being available.
         self.gtfo = GTFOBins(
-            str(_pkg_files("pwncat").joinpath("data/gtfobins.json")), self.which
+            str(_pkg_files("pwncat").joinpath("data/gtfobins.json")), self.which,
         )
 
         # Drain any shell startup output (e.g. "bash: no job control",
@@ -658,7 +651,7 @@ class Linux(Platform):
                 if shell is not None:
                     self.session.log(f"upgrading from {self.shell} to {shell}")
                     self.shell = shell
-                    self.channel.sendline(f"exec {self.shell}".encode("utf-8"))
+                    self.channel.sendline(f"exec {self.shell}".encode())
                     # Wait for the new shell to be ready by sending a sync
                     # marker and waiting for it, instead of a fixed sleep.
                     # This drains any startup output (e.g. "no job control").
@@ -716,7 +709,7 @@ class Linux(Platform):
                     continue
 
                 payload = payload_format.format(
-                    binary_path=binary_path, shell=self.shell
+                    binary_path=binary_path, shell=self.shell,
                 )
 
                 # Send the payload
@@ -748,7 +741,7 @@ class Linux(Platform):
 
             self._pty_failed = True
             self.session.log(
-                "no pty methods available; continuing without pty"
+                "no pty methods available; continuing without pty",
             )
             return
 
@@ -803,7 +796,7 @@ class Linux(Platform):
         try:
             # Detect remote architecture
             result = self.run(
-                "uname -m", shell=True, capture_output=True, text=True
+                "uname -m", shell=True, capture_output=True, text=True,
             )
             arch = result.stdout.strip()
             helper_name = self.PTY_HELPER_ARCH_MAP.get(arch)
@@ -828,7 +821,7 @@ class Linux(Platform):
             remote_path = f"{writable_dir}/.{rand_name}"
 
             self.session.log(
-                f"uploading pty_helper to {writable_dir} ({len(helper_data)} bytes)"
+                f"uploading pty_helper to {writable_dir} ({len(helper_data)} bytes)",
             )
 
             # Upload via base64 in chunks
@@ -887,10 +880,10 @@ class Linux(Platform):
         with self.session.task("calculating host hash") as task:
             try:
                 self.session.update_task(
-                    task, status="retrieving hostname (hostname -f)"
+                    task, status="retrieving hostname (hostname -f)",
                 )
                 result = self.run(
-                    "hostname -f", shell=True, check=True, text=True, encoding="utf-8"
+                    "hostname -f", shell=True, check=True, text=True, encoding="utf-8",
                 )
                 hostname = result.stdout.strip()
             except CalledProcessError:
@@ -898,10 +891,10 @@ class Linux(Platform):
 
             try:
                 self.session.update_task(
-                    task, status="retrieving mac addresses (ifconfig)"
+                    task, status="retrieving mac addresses (ifconfig)",
                 )
                 result = self.run(
-                    "ifconfig -a", shell=True, check=True, text=True, encoding="utf-8"
+                    "ifconfig -a", shell=True, check=True, text=True, encoding="utf-8",
                 )
                 ifconfig = result.stdout.strip().lower()
 
@@ -918,7 +911,7 @@ class Linux(Platform):
                 # Attempt to use the `ip` command instead
                 try:
                     self.session.update_task(
-                        task, status="retrieving mac addresses (ip link show)"
+                        task, status="retrieving mac addresses (ip link show)",
                     )
                     result = self.run(
                         "ip link show",
@@ -1000,7 +993,7 @@ class Linux(Platform):
 
         try:
             result = self.run(
-                ["which", name], text=True, capture_output=True, check=True
+                ["which", name], text=True, capture_output=True, check=True,
             )
             return result.stdout.rstrip("\n")
         except CalledProcessError:
@@ -1066,11 +1059,11 @@ class Linux(Platform):
 
     def compile(
         self,
-        sources: List[Union[str, BinaryIO]],
+        sources: list[str | BinaryIO],
         output: str = None,
         suffix: str = None,
-        cflags: List[str] = None,
-        ldflags: List[str] = None,
+        cflags: list[str] = None,
+        ldflags: list[str] = None,
     ) -> str:
         """
         Attempt to compile the given C source files into a binary suitable for the remote
@@ -1129,7 +1122,7 @@ class Linux(Platform):
                     real_sources.append(source)
                 else:
                     with tempfile.NamedTemporaryFile(
-                        mode="w", suffix=".c", delete=False
+                        mode="w", suffix=".c", delete=False,
                     ) as filp:
                         filp.write(source.read())
                         real_sources.append(filp.name)
@@ -1180,7 +1173,7 @@ class Linux(Platform):
                 self.run(["chmod", "+x", remote_path], check=True)
             except pwncat.subprocess.CalledProcessError:
                 self.session.log(
-                    "[yellow]warning[/yellow]: failed to set executable bit on compiled binary"
+                    "[yellow]warning[/yellow]: failed to set executable bit on compiled binary",
                 )
 
             return remote_path
@@ -1225,8 +1218,8 @@ class Linux(Platform):
                 for source in real_sources:
                     self.session.register_fact(
                         CreatedFile(
-                            source="platform.compile", uid=self.getuid(), path=source
-                        )
+                            source="platform.compile", uid=self.getuid(), path=source,
+                        ),
                     )
 
         return output
@@ -1258,7 +1251,7 @@ class Linux(Platform):
 
         if self.interactive:
             raise PlatformError(
-                "cannot open non-interactive process in interactive mode"
+                "cannot open non-interactive process in interactive mode",
             )
 
         if isinstance(args, list):
@@ -1270,7 +1263,7 @@ class Linux(Platform):
 
         if self.command_running is not None:
             raise PlatformError(
-                f"attempting to run {repr(command)} during execution of {self.command_running.args}!"
+                f"attempting to run {command!r} during execution of {self.command_running.args}!",
             )
 
         # This breaks `euid` situations. Not all shells support -p, so I think just not
@@ -1289,7 +1282,7 @@ class Linux(Platform):
                     [
                         f"{util.quote(name)}={util.quote(value)}"
                         for name, value in env.items()
-                    ]
+                    ],
                 )
                 + " "
                 + command
@@ -1323,7 +1316,7 @@ class Linux(Platform):
         commands = []
         commands.append(" export PS1=")
         commands.append(
-            f"echo; echo {start_delim}; {command}; R=$?; echo {end_delim}; echo $R; echo {code_delim}"
+            f"echo; echo {start_delim}; {command}; R=$?; echo {end_delim}; echo $R; echo {code_delim}",
         )
 
         # Build the final command
@@ -1359,7 +1352,7 @@ class Linux(Platform):
 
         return popen
 
-    def chdir(self, path: Union[str, Path]):
+    def chdir(self, path: str | Path):
         """
         Change directories to the given path. This method returns the current
         working directory prior to the change.
@@ -1385,7 +1378,7 @@ class Linux(Platform):
 
     def open(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         mode: str = "r",
         buffering: int = -1,
         encoding: str = "utf-8",
@@ -1420,19 +1413,19 @@ class Linux(Platform):
             path = self.Path(path)
 
         if "r" in mode and not path.exists():
-            raise FileNotFoundError(f"No such file or directory: {str(path)}")
+            raise FileNotFoundError(f"No such file or directory: {path!s}")
         if "r" in mode and not path.readable():
-            raise PermissionError(f"Permission Denied: {str(path)}")
+            raise PermissionError(f"Permission Denied: {path!s}")
 
         if "w" in mode:
             parent = path.parent
 
             if "w" in mode and path.exists() and not path.writable():
-                raise PermissionError(f"Permission Denied: {str(path)}")
+                raise PermissionError(f"Permission Denied: {path!s}")
             if "w" in mode and not path.exists() and not parent.writable():
-                raise PermissionError(f"Permission Denied: {str(path)}")
+                raise PermissionError(f"Permission Denied: {path!s}")
             if "w" in mode and not path.exists() and not parent.exists():
-                raise FileNotFoundError(f"No such file or directory: {str(path)}")
+                raise FileNotFoundError(f"No such file or directory: {path!s}")
 
         # Save this just in case we are opening a text-mode stream
         line_buffering = buffering == -1 or buffering == 1
@@ -1445,11 +1438,11 @@ class Linux(Platform):
         if "w" in mode:
 
             for method in self.gtfo.iter_methods(
-                caps=Capability.WRITE, stream=Stream.RAW
+                caps=Capability.WRITE, stream=Stream.RAW,
             ):
                 try:
                     payload, input_data, exit_cmd = method.build(
-                        gtfo=self.gtfo, lfile=path, suid=True
+                        gtfo=self.gtfo, lfile=path, suid=True,
                     )
                     break
                 except MissingBinary:
@@ -1468,17 +1461,17 @@ class Linux(Platform):
             stream = LinuxWriter(
                 popen,
                 on_close=lambda filp: filp.popen.platform.channel.send(
-                    exit_cmd.encode("utf-8")
+                    exit_cmd.encode("utf-8"),
                 ),
                 name=path,
             )
         else:
             for method in self.gtfo.iter_methods(
-                caps=Capability.READ, stream=Stream.RAW
+                caps=Capability.READ, stream=Stream.RAW,
             ):
                 try:
                     payload, input_data, exit_cmd = method.build(
-                        gtfo=self.gtfo, lfile=path, suid=True
+                        gtfo=self.gtfo, lfile=path, suid=True,
                     )
                     break
                 except MissingBinary:
@@ -1497,7 +1490,7 @@ class Linux(Platform):
             stream = LinuxReader(
                 popen,
                 on_close=lambda filp: filp.popen.platform.channel.send(
-                    exit_cmd.encode("utf-8")
+                    exit_cmd.encode("utf-8"),
                 ),
                 name=path,
             )
@@ -1516,9 +1509,9 @@ class Linux(Platform):
 
     def tempfile(
         self,
-        length: Optional[int] = None,
-        suffix: Optional[str] = None,
-        directory: Optional[str] = None,
+        length: int | None = None,
+        suffix: str | None = None,
+        directory: str | None = None,
         **kwargs,
     ):
         """
@@ -1581,7 +1574,7 @@ class Linux(Platform):
 
         return self.open(path, **kwargs)
 
-    def su(self, user: str, password: Optional[str] = None):
+    def su(self, user: str, password: str | None = None):
         """
         Attempt to switch users in the running shell. This normally executes a new
         sub-shell as the requested user. On unix-like systems, this is simply a
@@ -1610,7 +1603,7 @@ class Linux(Platform):
 
         # Run `su`
         proc = self.Popen(
-            ["su", user], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
+            ["su", user], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
         )
 
         # Assume we don't need a password if we are root
@@ -1647,10 +1640,10 @@ class Linux(Platform):
 
     def sudo(
         self,
-        command: Union[str, List[str]],
-        user: Optional[str] = None,
-        group: Optional[str] = None,
-        password: Optional[str] = None,
+        command: str | list[str],
+        user: str | None = None,
+        group: str | None = None,
+        password: str | None = None,
         as_is: bool = False,
         **popen_kwargs,
     ):
@@ -1693,7 +1686,7 @@ class Linux(Platform):
                     [
                         f"{util.quote(name)}={util.quote(value)}"
                         for name, value in popen_kwargs["env"].items()
-                    ]
+                    ],
                 )
                 + " "
                 + command
@@ -1838,7 +1831,7 @@ class Linux(Platform):
                 columns, rows = 80, 24
 
             prompt = self.PROMPTS.get(
-                os.path.basename(self.shell), self.PROMPTS["default"]
+                os.path.basename(self.shell), self.PROMPTS["default"],
             )
 
             # Drain any remaining output from the commands run by pwncat
@@ -1851,7 +1844,7 @@ class Linux(Platform):
                         [
                             f" export TERM='{TERM}'",
                             f"""export PS1={prompt}""",
-                        ]
+                        ],
                     )
                     + "\n"
                 )
@@ -1863,7 +1856,7 @@ class Linux(Platform):
                             f" stty rows {rows} columns {columns}",
                             f" export TERM='{TERM}'",
                             f"""export PS1={prompt}""",
-                        ]
+                        ],
                     )
                     + "\n"
                 )
@@ -1889,7 +1882,7 @@ class Linux(Platform):
         """Get the name of the current user"""
 
         return self.run(
-            ["whoami"], capture_output=True, check=True, encoding="utf-8"
+            ["whoami"], capture_output=True, check=True, encoding="utf-8",
         ).stdout.rstrip("\n")
 
     def _parse_stat(self, result: str) -> os.stat_result:
@@ -1940,8 +1933,8 @@ class Linux(Platform):
                     int(fields[2]),
                     int(fields[13]),
                     int(fields[1]),
-                ]
-            )
+                ],
+            ),
         )
 
         return stat
@@ -2001,7 +1994,7 @@ class Linux(Platform):
 
         try:
             result = self.run(
-                ["realpath", path], capture_output=True, text=True, check=True
+                ["realpath", path], capture_output=True, text=True, check=True,
             )
             return result.stdout.rstrip("\n")
         except CalledProcessError as exc:
@@ -2013,7 +2006,7 @@ class Linux(Platform):
         try:
             self.lstat(path)
             result = self.run(
-                ["readlink", path], capture_output=True, text=True, check=True
+                ["readlink", path], capture_output=True, text=True, check=True,
             )
             return result.stdout.rstrip("\n")
         except CalledProcessError as exc:
@@ -2064,8 +2057,7 @@ class Linux(Platform):
         except CalledProcessError as exc:
             if "exists" in exc.stdout:
                 raise FileExistsError(exc.stdout) from exc
-            else:
-                raise FileNotFoundError(exc.stdout) from exc
+            raise FileNotFoundError(exc.stdout) from exc
 
     def rename(self, source: str, target: str):
         """Rename a file from the source to the target. This should

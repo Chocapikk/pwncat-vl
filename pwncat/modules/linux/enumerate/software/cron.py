@@ -26,11 +26,11 @@ class CronEntry(Fact):
         return f"{self.path}: {self.datetime} {self.command}"
 
     def title(self, session):
-        return f"[blue]{session.find_user(uid=self.uid).name}[/blue] runs [yellow]{repr(self.command)}[/yellow]"
+        return f"[blue]{session.find_user(uid=self.uid).name}[/blue] runs [yellow]{self.command!r}[/yellow]"
 
 
 def parse_crontab(
-    source, session, path: str, line: str, system: bool = True
+    source, session, path: str, line: str, system: bool = True,
 ) -> CronEntry:
     """
     Parse a crontab line. This returns a tuple of (command, datetime, user) indicating
@@ -85,7 +85,7 @@ class Module(EnumerateModule):
         try:
             # Get this user's crontab entries
             proc = session.platform.run(
-                ["crontab", "-l"], capture_output=True, text=True, check=True
+                ["crontab", "-l"], capture_output=True, text=True, check=True,
             )
             user_entries = proc.stdout
 
@@ -96,7 +96,7 @@ class Module(EnumerateModule):
         for line in user_entries.split("\n"):
             try:
                 yield parse_crontab(
-                    self.name, session, "crontab -l", line, system=False
+                    self.name, session, "crontab -l", line, system=False,
                 )
             except ValueError:
                 continue
@@ -109,7 +109,7 @@ class Module(EnumerateModule):
                     for line in filp:
                         try:
                             yield parse_crontab(
-                                self.name, session, tab_path, line, system=True
+                                self.name, session, tab_path, line, system=True,
                             )
                         except ValueError:
                             continue
@@ -133,7 +133,7 @@ class Module(EnumerateModule):
                     yield Status(f"reading [cyan]{filename}[/cyan]")
                     try:
                         with session.platform.open(
-                            os.path.join(dir_path, filename), "r"
+                            os.path.join(dir_path, filename), "r",
                         ) as filp:
                             for line in filp:
                                 try:

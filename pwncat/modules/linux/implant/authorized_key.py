@@ -31,7 +31,7 @@ class AuthorizedKeyImplant(PrivateKey):
 
     def description(self, session: "pwncat.manager.Session"):
         """We don't want to print the whole key, since we installed it."""
-        return None
+        return
 
     def remove(self, session: "pwncat.manager.Session"):
         """Normal private key facts don't remove the key, but we need to. In this
@@ -94,7 +94,7 @@ class Module(ImplantModule):
         current_user = session.current_user()
         if user != "__pwncat_current__" and current_user.id != 0:
             raise ModuleFailed(
-                "only [blue]root[/blue] can install implants for other users"
+                "only [blue]root[/blue] can install implants for other users",
             )
 
         if not os.path.isfile(key):
@@ -102,7 +102,7 @@ class Module(ImplantModule):
 
         try:
             yield Status("reading public key")
-            with open(key + ".pub", "r") as filp:
+            with open(key + ".pub") as filp:
                 pubkey = filp.read().rstrip("\n") + "\n"
         except (FileNotFoundError, PermissionError) as exc:
             raise ModuleFailed(str(exc)) from exc
@@ -121,7 +121,7 @@ class Module(ImplantModule):
         for implant in session.run("enumerate", types=["implant.*"]):
             if implant.source == self.name and implant.uid == user_info.uid:
                 raise ModuleFailed(
-                    f"[blue]{self.name}[/blue] already installed for [blue]{user_info.name}[/blue]"
+                    f"[blue]{self.name}[/blue] already installed for [blue]{user_info.name}[/blue]",
                 )
 
         # Ensure the directory exists

@@ -54,12 +54,12 @@ class Command(CommandDefinition):
             started = time.time()
             with progress:
                 task_id = progress.add_task(
-                    "upload", filename=args.destination, total=length, start=False
+                    "upload", filename=args.destination, total=length, start=False,
                 )
 
                 with open(args.source, "rb") as source:
                     with manager.target.platform.open(
-                        args.destination, "wb"
+                        args.destination, "wb",
                     ) as destination:
                         progress.start_task(task_id)
                         copyfileobj(
@@ -76,7 +76,7 @@ class Command(CommandDefinition):
             elapsed = time.time() - started
             console.log(
                 f"uploaded [cyan]{human_readable_size(length)}[/cyan] "
-                f"in [green]{human_readable_delta(elapsed)}[/green]"
+                f"in [green]{human_readable_delta(elapsed)}[/green]",
             )
         except (
             FileNotFoundError,

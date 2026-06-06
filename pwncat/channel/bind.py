@@ -52,8 +52,8 @@ class Bind(Socket):
                 # See `/proc/sys/net/ipv4/ip_unprivileged_port_start`
                 error_message = (
                     "unable to listen on a privileged port"
-                    + "\nusually ports in the range 0-1023 are restricted"
-                    + "\n[green][TRY][/green]: try to run `pwncat` as `[red]root[/red]`"
+                    "\nusually ports in the range 0-1023 are restricted"
+                    "\n[green][TRY][/green]: try to run `pwncat` as `[red]root[/red]`"
                 )
             elif exc.args[0] == errno.EADDRINUSE:
                 error_message = "port is already in use"
@@ -83,5 +83,5 @@ class Bind(Socket):
                 self.server.close()
 
             progress.log(
-                f"[green]received[/green] connection from [blue]{address[0]}[/blue]:[cyan]{address[1]}[/cyan]"
+                f"[green]received[/green] connection from [blue]{address[0]}[/blue]:[cyan]{address[1]}[/cyan]",
             )

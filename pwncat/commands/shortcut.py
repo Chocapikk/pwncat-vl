@@ -6,7 +6,7 @@ class Command(CommandDefinition):
     PROG = "shortcut"
     ARGS = {
         "prefix": Parameter(
-            Complete.NONE, help="the prefix character used for the shortcut"
+            Complete.NONE, help="the prefix character used for the shortcut",
         ),
         "command": Parameter(Complete.NONE, help="the command to execute"),
     }
@@ -15,7 +15,7 @@ class Command(CommandDefinition):
     def run(self, manager, args):
 
         for command in manager.parser.commands:
-            if command.PROG == args.command:
+            if args.command == command.PROG:
                 manager.parser.shortcuts[args.prefix] = command
                 return
 

@@ -109,7 +109,7 @@ class Module(BaseModule):
             yield Status(f"loading {url.split('/')[-1]}")
 
             path = str(
-                _pkg_files("pwncat").joinpath(os.path.join("data/PowerSploit", url))
+                _pkg_files("pwncat").joinpath(os.path.join("data/PowerSploit", url)),
             )
 
             try:
@@ -117,4 +117,4 @@ class Module(BaseModule):
                 session.run("manage.powershell.import", path=path)
             except PowershellError as exc:
                 # We failed, but continue loading other scripts. Just let the user know.
-                session.log(f"while loading {url.split('/')[-1]}: {str(exc)}")
+                session.log(f"while loading {url.split('/')[-1]}: {exc!s}")

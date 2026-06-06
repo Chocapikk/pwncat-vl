@@ -15,7 +15,7 @@ TODO: This should use csvreader.
 
 class MountedDrive(Fact):
     def __init__(
-        self, source, drive_letter: str, tag: str, drive_name: str, system_name: str
+        self, source, drive_letter: str, tag: str, drive_name: str, system_name: str,
     ):
         super().__init__(source=source, types=["system.drives"])
 
@@ -59,7 +59,7 @@ class Module(EnumerateModule):
 
                 _, drive_letter, tag, system_name, drive_name = line.split(",")
                 yield MountedDrive(
-                    self.name, drive_letter[0], tag, drive_name, system_name
+                    self.name, drive_letter[0], tag, drive_name, system_name,
                 )
 
         proc.wait()

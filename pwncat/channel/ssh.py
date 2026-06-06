@@ -8,8 +8,7 @@ An optional port argument is also accepted.
 """
 
 import os
-import socket
-from typing import Union, TextIO, Optional
+from typing import TextIO
 
 import paramiko
 from prompt_toolkit import prompt
@@ -69,9 +68,9 @@ class Ssh(Channel):
             self._connected = True
 
         except paramiko.ssh_exception.AuthenticationException as exc:
-            raise ChannelError(self, f"ssh authentication failed: {str(exc)}") from exc
+            raise ChannelError(self, f"ssh authentication failed: {exc!s}") from exc
         except (paramiko.ssh_exception.SSHException, OSError) as exc:
-            raise ChannelError(self, f"ssh connection failed: {str(exc)}") from exc
+            raise ChannelError(self, f"ssh connection failed: {exc!s}") from exc
 
     @property
     def connected(self):
@@ -99,7 +98,7 @@ class Ssh(Channel):
 
         return len(data)
 
-    def recv(self, count: Optional[int] = None) -> bytes:
+    def recv(self, count: int | None = None) -> bytes:
         """Receive data from the remote shell
 
         If your channel class does not implement ``peak``, a default
@@ -126,13 +125,13 @@ class Ssh(Channel):
             data += self.client.recv(count - len(data))
             if data == b"":
                 raise ChannelClosed(self)
-        except socket.timeout:
+        except TimeoutError:
             pass
 
         return data
 
 
-def load_private_key(identity: Union[str, TextIO], passphrase: str = None):
+def load_private_key(identity: str | TextIO, passphrase: str = None):
     """Load a private key and return the appropriate PKey object"""
 
     if identity is None:
@@ -141,7 +140,7 @@ def load_private_key(identity: Union[str, TextIO], passphrase: str = None):
     try:
         if isinstance(identity, str):
             return paramiko.pkey.load_private_key_file(
-                os.path.expanduser(identity), password=passphrase
+                os.path.expanduser(identity), password=passphrase,
             )
 
         identity.seek(0)

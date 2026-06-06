@@ -39,8 +39,7 @@ import contextlib
 import importlib.util
 from io import TextIOWrapper
 from enum import Enum, auto
-from typing import Union, Callable, Optional
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 
 import ZODB
 import rich.progress
@@ -117,36 +116,36 @@ class Listener(threading.Thread):
         manager: "Manager",
         address: tuple[str, int],
         protocol: str = "socket",
-        platform: Optional[str] = None,
-        count: Optional[int] = None,
-        established: Optional[Callable[["Session"], bool]] = None,
+        platform: str | None = None,
+        count: int | None = None,
+        established: Callable[["Session"], bool] | None = None,
         ssl: bool = False,
-        ssl_cert: Optional[str] = None,
-        ssl_key: Optional[str] = None,
+        ssl_cert: str | None = None,
+        ssl_key: str | None = None,
     ):
         super().__init__(daemon=True)
 
-        self.manager: "Manager" = manager
+        self.manager: Manager = manager
         """ The controlling manager object """
         self.address: tuple[str, int] = address
         """ The address to bind our listener to on the attacking machine """
         self.protocol: str = protocol
         """ Name of the channel protocol to use for incoming connections """
-        self.platform: Optional[str] = platform
+        self.platform: str | None = platform
         """ The platform to use when automatically establishing sessions """
-        self.count: Optional[int] = count
+        self.count: int | None = count
         """ The number of connections to receive before exiting """
-        self.established: Optional[Callable[["Session"], bool]] = established
+        self.established: Callable[[Session], bool] | None = established
         """ A callback used when a new session is established """
         self.ssl: bool = ssl
         """ Whether to wrap the listener in SSL """
-        self.ssl_cert: Optional[str] = ssl_cert
+        self.ssl_cert: str | None = ssl_cert
         """ The SSL server certificate """
-        self.ssl_key: Optional[str] = ssl_key
+        self.ssl_key: str | None = ssl_key
         """ The SSL server key """
         self.state: ListenerState = ListenerState.STOPPED
         """ The current state of the listener; only set internally """
-        self.failure_exception: Optional[Exception] = None
+        self.failure_exception: Exception | None = None
         """ An exception which was caught and put the listener in ListenerState.FAILED state """
         self._stop_event: threading.Event = threading.Event()
         """ An event used to signal the listener to stop """
@@ -166,7 +165,7 @@ class Listener(threading.Thread):
         return self._channel_queue.qsize()
 
     def iter_sessions(
-        self, count: Optional[int] = None
+        self, count: int | None = None,
     ) -> Generator["Session", None, None]:
         """
         Synchronously iterate over new sessions. This generated will
@@ -192,7 +191,7 @@ class Listener(threading.Thread):
                 return
 
     def iter_channels(
-        self, count: Optional[int] = None
+        self, count: int | None = None,
     ) -> Generator["Channel", None, None]:
         """
         Synchronously iterate over new channels. This generated will
@@ -255,7 +254,7 @@ class Listener(threading.Thread):
                 # We can't initialize this channel, so we just throw it on the queue
                 self._channel_queue.put_nowait(channel)
                 self.manager.log(
-                    f"[magenta]listener[/magenta]: {str(self)}: queuing pending channel: {channel} ({self._channel_queue.qsize()} pending)"
+                    f"[magenta]listener[/magenta]: {self!s}: queuing pending channel: {channel} ({self._channel_queue.qsize()} pending)",
                 )
                 return None
 
@@ -267,7 +266,7 @@ class Listener(threading.Thread):
                 )
 
                 self.manager.log(
-                    f"[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[1]}[/cyan]: {platform} session from {channel} established"
+                    f"[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[1]}[/cyan]: {platform} session from {channel} established",
                 )
 
                 # Call established callback for session notification
@@ -298,7 +297,7 @@ class Listener(threading.Thread):
                     if self.count <= 0:
                         # Drain waiting channels
                         self.manager.log(
-                            "[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[0]}[/cyan]: max session count reached; shutting down"
+                            "[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[0]}[/cyan]: max session count reached; shutting down",
                         )
                         self._stop_event.set()
 
@@ -336,7 +335,7 @@ class Listener(threading.Thread):
                 try:
                     # Accept a new client connection
                     client, address = server.accept()
-                except socket.timeout:
+                except TimeoutError:
                     # No connection, loop and check if we've been stopped
                     continue
 
@@ -351,7 +350,7 @@ class Listener(threading.Thread):
                 except ListenerError as exc:
                     # this connection didn't establish; log it
                     self.manager.log(
-                        f"[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[1]}[/cyan]: connection from [blue]{address[0]}[/blue]:[cyan]{address[1]}[/cyan] aborted: {exc}"
+                        f"[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[1]}[/cyan]: connection from [blue]{address[0]}[/blue]:[cyan]{address[1]}[/cyan] aborted: {exc}",
                     )
 
                     if channel is not None:
@@ -383,7 +382,7 @@ class Listener(threading.Thread):
         # Create a listener
         try:
             server = socket.create_server(
-                self.address, reuse_port=True, backlog=self.count
+                self.address, reuse_port=True, backlog=self.count,
             )
 
             return server
@@ -406,7 +405,7 @@ class Listener(threading.Thread):
         if self.ssl_cert is None or self.ssl_key is None:
             with tempfile.NamedTemporaryFile("wb", delete=False) as filp:
                 self.manager.log(
-                    f"generating self-signed certificate at {repr(filp.name)}"
+                    f"generating self-signed certificate at {filp.name!r}",
                 )
 
                 key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -415,7 +414,7 @@ class Listener(threading.Thread):
                         encoding=serialization.Encoding.PEM,
                         format=serialization.PrivateFormat.TraditionalOpenSSL,
                         encryption_algorithm=serialization.NoEncryption(),
-                    )
+                    ),
                 )
 
                 # Literally taken from: https://cryptography.io/en/latest/x509/tutorial/
@@ -423,12 +422,12 @@ class Listener(threading.Thread):
                     [
                         x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
                         x509.NameAttribute(
-                            NameOID.STATE_OR_PROVINCE_NAME, "California"
+                            NameOID.STATE_OR_PROVINCE_NAME, "California",
                         ),
                         x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
                         x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
                         x509.NameAttribute(NameOID.COMMON_NAME, "mysite.com"),
-                    ]
+                    ],
                 )
                 cert = (
                     x509.CertificateBuilder()
@@ -438,7 +437,7 @@ class Listener(threading.Thread):
                     .serial_number(x509.random_serial_number())
                     .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
                     .not_valid_after(
-                        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+                        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365),
                     )
                     .add_extension(
                         x509.SubjectAlternativeName([x509.DNSName("localhost")]),
@@ -495,8 +494,8 @@ class Session:
     def __init__(
         self,
         manager,
-        platform: Union[str, Platform],
-        channel: Optional[Channel] = None,
+        platform: str | Platform,
+        channel: Channel | None = None,
         active: bool = True,
         **kwargs,
     ):
@@ -613,7 +612,7 @@ class Session:
             ):
                 return group
 
-    def iter_groups(self, members: Optional[list[Union[str, int]]] = None):
+    def iter_groups(self, members: list[str | int] | None = None):
         """Iterate over groups for the target"""
 
         for group in self.run("enumerate.gather", progress=False, types=["group"]):
@@ -786,7 +785,7 @@ class Session:
             self.platform.channel.close()
         except (PlatformError, ChannelError) as exc:
             self.log(
-                f"[yellow]warning[/yellow]: unexpected exception while closing: {exc}"
+                f"[yellow]warning[/yellow]: unexpected exception while closing: {exc}",
             )
 
         self.died()
@@ -918,7 +917,7 @@ class Manager:
             storage = ZODB.FileStorage.FileStorage(path)
         else:
             raise ValueError(
-                f"Unsupported database URI: {uri!r}. Use 'memory://' or 'file://path/to/db.fs'"
+                f"Unsupported database URI: {uri!r}. Use 'memory://' or 'file://path/to/db.fs'",
             )
         self.db = ZODB.DB(storage, **db_kwargs)
 
@@ -955,7 +954,7 @@ class Manager:
         """
 
         for finder, module_name, is_pkg in pkgutil.walk_packages(
-            paths, prefix="pwncat.modules."
+            paths, prefix="pwncat.modules.",
         ):
             # Already loaded — reuse it
             if module_name in sys.modules:
@@ -1053,7 +1052,7 @@ class Manager:
                 except InteractiveExit:
 
                     if self.sessions and not confirm(
-                        "There are active sessions. Are you sure?"
+                        "There are active sessions. Are you sure?",
                     ):
                         continue
 
@@ -1061,11 +1060,11 @@ class Manager:
 
                     for listener in self.listeners:
                         if listener.pending and not confirm(
-                            "There are pending channels. Are you sure?"
+                            "There are pending channels. Are you sure?",
                         ):
                             cancel = True
                             break
-                        elif listener.pending:
+                        if listener.pending:
                             break
 
                     if cancel:
@@ -1083,7 +1082,7 @@ class Manager:
                 output_thread = None
 
                 def output_thread_main(
-                    target: Session, exception_queue: queue.SimpleQueue
+                    target: Session, exception_queue: queue.SimpleQueue,
                 ):
 
                     while not interactive_complete.is_set():
@@ -1112,7 +1111,7 @@ class Manager:
 
                     exception_queue = queue.Queue(maxsize=1)
                     output_thread = threading.Thread(
-                        target=output_thread_main, args=[self.target, exception_queue]
+                        target=output_thread_main, args=[self.target, exception_queue],
                     )
                     output_thread.start()
 
@@ -1129,7 +1128,7 @@ class Manager:
                     self.target.platform.interactive = False
                 except ChannelClosed:
                     self.log(
-                        f"[yellow]warning[/yellow]: {self.target.platform}: connection reset"
+                        f"[yellow]warning[/yellow]: {self.target.platform}: connection reset",
                     )
                     self.target.died()
                 finally:
@@ -1147,12 +1146,12 @@ class Manager:
         protocol: str,
         host: str,
         port: int,
-        platform: Optional[str] = None,
+        platform: str | None = None,
         ssl: bool = False,
-        ssl_cert: Optional[str] = None,
-        ssl_key: Optional[str] = None,
-        count: Optional[int] = None,
-        established: Optional[Callable[[Session], bool]] = None,
+        ssl_cert: str | None = None,
+        ssl_key: str | None = None,
+        count: int | None = None,
+        established: Callable[[Session], bool] | None = None,
     ) -> Listener:
         """
         Create and start a new background listener which will wait for connections from

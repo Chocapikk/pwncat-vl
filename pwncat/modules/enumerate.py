@@ -202,9 +202,9 @@ class EnumerateModule(BaseModule):
 
         if self.name not in state:
             return False
-        elif self.SCHEDULE is Schedule.ONCE:
+        if self.SCHEDULE is Schedule.ONCE:
             return True
-        elif self.SCHEDULE is Schedule.PER_USER:
+        if self.SCHEDULE is Schedule.PER_USER:
             return session.platform.getuid() in state[self.name]
 
         return False
@@ -283,7 +283,7 @@ class EnumerateModule(BaseModule):
         self._mark_complete(session)
 
     def enumerate(
-        self, session: "pwncat.manager.Session"
+        self, session: "pwncat.manager.Session",
     ) -> typing.Generator[Fact, None, None]:
         """Enumerate facts according to the types listed in ``PROVIDES``.
 

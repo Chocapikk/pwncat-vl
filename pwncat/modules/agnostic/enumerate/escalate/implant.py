@@ -44,7 +44,7 @@ class Module(EnumerateModule):
     def enumerate(self, session):
 
         for implant in session.run(
-            "enumerate", types=["implant.replace", "implant.spawn"]
+            "enumerate", types=["implant.replace", "implant.spawn"],
         ):
             if "implant.replace" in implant.types:
                 yield ImplantEscalationReplace(implant)

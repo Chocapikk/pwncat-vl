@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict
 
 import rich.markup
 
@@ -13,7 +12,7 @@ class SELinuxState(Fact):
         super().__init__(source=source, types=["system.selinux"])
 
         self.state: str = state
-        self.status: Dict[str, str] = status
+        self.status: dict[str, str] = status
 
     def title(self, session):
         result = "SELinux is "

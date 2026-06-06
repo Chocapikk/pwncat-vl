@@ -31,7 +31,7 @@ class Module(EnumerateModule):
 
         try:
             with session.platform.open(
-                "/proc/sys/kernel/randomize_va_space", "r"
+                "/proc/sys/kernel/randomize_va_space", "r",
             ) as filp:
                 value = filp.read()
                 try:

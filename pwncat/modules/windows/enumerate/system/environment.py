@@ -30,7 +30,7 @@ class Module(EnumerateModule):
 
         try:
             result = session.platform.powershell(
-                "Get-ChildItem env:\\ | Select Name,Value"
+                "Get-ChildItem env:\\ | Select Name,Value",
             )
 
             if not result:

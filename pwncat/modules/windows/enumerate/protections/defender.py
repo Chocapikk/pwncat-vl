@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Dict
+from typing import Any
 
 import rich.markup
 
@@ -11,7 +11,7 @@ from pwncat.modules.enumerate import EnumerateModule
 
 
 class DefenderData(Fact):
-    def __init__(self, source, configuration: Dict):
+    def __init__(self, source, configuration: dict):
         super().__init__(source=source, types=["protections.defender"])
 
         self._configuration: Any = configuration
@@ -54,7 +54,7 @@ class Module(EnumerateModule):
 
         if not session.platform.is_admin():
             session.log(
-                "[yellow]protections warning[/yellow]: not all Defender data can be received without admin privileges"
+                "[yellow]protections warning[/yellow]: not all Defender data can be received without admin privileges",
             )
 
         try:

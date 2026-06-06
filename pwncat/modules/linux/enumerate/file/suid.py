@@ -69,10 +69,10 @@ class Module(EnumerateModule):
 
                     yield from (
                         build_gtfo_ability(
-                            self.name, uid, method, source_uid=None, suid=True
+                            self.name, uid, method, source_uid=None, suid=True,
                         )
                         for method in session.platform.gtfo.iter_binary(
-                            path, stream=Stream.RAW
+                            path, stream=Stream.RAW,
                         )
                     )
         finally:

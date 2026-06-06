@@ -50,7 +50,7 @@ class SSLBind(Bind):
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
                     encryption_algorithm=serialization.NoEncryption(),
-                )
+                ),
             )
 
             # Literally taken from: https://cryptography.io/en/latest/x509/tutorial/
@@ -62,7 +62,7 @@ class SSLBind(Bind):
                     x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
                     x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
                     x509.NameAttribute(NameOID.COMMON_NAME, "mysite.com"),
-                ]
+                ],
             )
             cert = (
                 x509.CertificateBuilder()
@@ -72,7 +72,7 @@ class SSLBind(Bind):
                 .serial_number(x509.random_serial_number())
                 .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
                 .not_valid_after(
-                    datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365)
+                    datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=365),
                 )
                 .add_extension(
                     x509.SubjectAlternativeName([x509.DNSName("localhost")]),

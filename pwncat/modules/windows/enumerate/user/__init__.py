@@ -29,7 +29,7 @@ class Module(EnumerateModule):
             users = [users]
         if not isinstance(users, list):
             raise ModuleFailed(
-                f"unexpected type from Get-LocalUser: {type(users).__name__}"
+                f"unexpected type from Get-LocalUser: {type(users).__name__}",
             )
 
         for user in users:

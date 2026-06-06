@@ -36,8 +36,9 @@ import logging
 import threading
 import logging.handlers
 from abc import ABC, abstractmethod
-from typing import List, Type, Union, BinaryIO, Optional, Generator
+from typing import BinaryIO
 from subprocess import CalledProcessError
+from collections.abc import Generator
 
 from rich.logging import RichHandler
 
@@ -87,16 +88,12 @@ class Path:
         uid = self.stat().st_uid
         gid = self.stat().st_gid
 
-        if uid == user.id and (mode & stat.S_IWUSR):
+        if uid == user.id and (mode & stat.S_IWUSR) or group.id == gid and (mode & stat.S_IWGRP):
             return True
-        elif group.id == gid and (mode & stat.S_IWGRP):
+        if group.id == gid and (mode & stat.S_IWGRP):
             return True
-        else:
-            if group.id == gid and (mode & stat.S_IWGRP):
-                return True
-            else:
-                if mode & stat.S_IWOTH:
-                    return True
+        if mode & stat.S_IWOTH:
+            return True
 
         return False
 
@@ -110,16 +107,12 @@ class Path:
         uid = self.stat().st_uid
         gid = self.stat().st_gid
 
-        if uid == user.id and (mode & stat.S_IRUSR):
+        if uid == user.id and (mode & stat.S_IRUSR) or group.id == gid and (mode & stat.S_IRGRP):
             return True
-        elif group.id == gid and (mode & stat.S_IRGRP):
+        if group.id == gid and (mode & stat.S_IRGRP):
             return True
-        else:
-            if group.id == gid and (mode & stat.S_IRGRP):
-                return True
-            else:
-                if mode & stat.S_IROTH:
-                    return True
+        if mode & stat.S_IROTH:
+            return True
 
         return False
 
@@ -160,12 +153,11 @@ class Path:
 
         if self.parts[0] == "~":
             return self.__class__(
-                self._target.find_user(self._target.whoami()).homedir, *self.parts[1:]
+                self._target.find_user(self._target.whoami()).homedir, *self.parts[1:],
             )
-        else:
-            return self.__class__(
-                self._target.find_user(self.parts[0][1:]).homedir, *self.parts[1:]
-            )
+        return self.__class__(
+            self._target.find_user(self.parts[0][1:]).homedir, *self.parts[1:],
+        )
 
     def glob(self, pattern: str) -> Generator["Path", None, None]:
         """Glob the given relative pattern in the directory represented
@@ -421,7 +413,7 @@ class Path:
             # In this case, we couldn't distinguish between errors
             # so, we distinguish here based on stat results
             if self.is_dir():
-                raise OSError(f"Directory not empty: {str(self)}") from exc
+                raise OSError(f"Directory not empty: {self!s}") from exc
             raise
 
     def link_to(self, target):
@@ -504,7 +496,7 @@ class Platform(ABC):
         # output log to a file
         if log is not None:
             handler = logging.handlers.RotatingFileHandler(
-                log, maxBytes=1024 * 1024 * 100, backupCount=5
+                log, maxBytes=1024 * 1024 * 100, backupCount=5,
             )
             handler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
             self.logger.addHandler(handler)
@@ -579,11 +571,11 @@ class Platform(ABC):
         """Exit this session"""
 
     @abstractmethod
-    def refresh_uid(self) -> Union[int, str]:
+    def refresh_uid(self) -> int | str:
         """Refresh the cached UID of the current session."""
 
     @abstractmethod
-    def getuid(self) -> Union[int, str]:
+    def getuid(self) -> int | str:
         """Get the current user ID. This should not query the target, but should
         return the current cached UID as found with `refresh_uid`."""
 
@@ -686,7 +678,7 @@ class Platform(ABC):
         return path
 
     @abstractmethod
-    def _do_which(self, name: str) -> Optional[str]:
+    def _do_which(self, name: str) -> str | None:
         """
         This is stub method which must be implemented by the platform. It is
         guaranteed to request to results directly from the victim whereas the
@@ -697,11 +689,11 @@ class Platform(ABC):
 
     def compile(
         self,
-        sources: List[Union[str, BinaryIO]],
+        sources: list[str | BinaryIO],
         output: str = None,
         suffix: str = None,
-        cflags: List[str] = None,
-        ldflags: List[str] = None,
+        cflags: list[str] = None,
+        ldflags: list[str] = None,
     ) -> str:
         """
         Attempt to compile the given C source files into a binary suitable for the remote
@@ -804,7 +796,7 @@ class Platform(ABC):
         stdout, stderr = p.communicate(input=input, timeout=timeout)
 
         completed_proc = pwncat.subprocess.CompletedProcess(
-            args, p.returncode, stdout, stderr
+            args, p.returncode, stdout, stderr,
         )
 
         if check:
@@ -813,7 +805,7 @@ class Platform(ABC):
         return completed_proc
 
     @abstractmethod
-    def chdir(self, path: Union[str, Path]):
+    def chdir(self, path: str | Path):
         """
         Change directories to the given path. This method returns the current
         working directory prior to the change.
@@ -827,7 +819,7 @@ class Platform(ABC):
         """
 
     @abstractmethod
-    def open(self, path: Union[str, Path], mode: str):
+    def open(self, path: str | Path, mode: str):
         """
         Open a remote file for reading or writing. Normally, only one of read or
         write modes are allowed for a remote file, but this may change with
@@ -849,7 +841,7 @@ class Platform(ABC):
 
     @abstractmethod
     def tempfile(
-        self, mode: str, length: Optional[int] = None, suffix: Optional[str] = None
+        self, mode: str, length: int | None = None, suffix: str | None = None,
     ):
         """
         Create a temporary file on the remote host and open it with the specified mode.
@@ -872,7 +864,7 @@ class Platform(ABC):
         :return: a file-like object
         """
 
-    def su(self, user: str, password: Optional[str] = None):
+    def su(self, user: str, password: str | None = None):
         """
         Attempt to switch users in the running shell. This normally executes a new
         sub-shell as the requested user. On unix-like systems, this is simply a
@@ -889,14 +881,14 @@ class Platform(ABC):
         """
 
         raise NotImplementedError(
-            f"switch-user not implemented for platform {self.name}"
+            f"switch-user not implemented for platform {self.name}",
         )
 
     def sudo(
         self,
-        command: Union[str, List[str]],
-        user: Optional[str] = None,
-        group: Optional[str] = None,
+        command: str | list[str],
+        user: str | None = None,
+        group: str | None = None,
         **popen_kwargs,
     ):
         """
@@ -967,7 +959,7 @@ class Platform(ABC):
             self._verbose_logging_handler = None
 
 
-def register(platform: Type[Platform]):
+def register(platform: type[Platform]):
     """
     Register a platform class to be automatically constructed with the
     ``create`` factory function with the given name. This can be used
@@ -982,7 +974,7 @@ def register(platform: Type[Platform]):
     PLATFORM_TYPES[platform.name] = platform
 
 
-def find(name: str) -> Type[Platform]:
+def find(name: str) -> type[Platform]:
     """
     Retrieve the platform class for the specified name
 
@@ -999,7 +991,7 @@ def find(name: str) -> Type[Platform]:
 def create(
     platform: str,
     log: str = None,
-    channel: Optional[pwncat.channel.Channel] = None,
+    channel: pwncat.channel.Channel | None = None,
     **kwargs,
 ):
     """

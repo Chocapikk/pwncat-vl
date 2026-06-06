@@ -86,7 +86,7 @@ class TestGtfobinsRegistry:
 
     def test_find_binary_returns_expected(self, empty_gtfo):
         empty_gtfo.parse_binary_data(
-            {"cat": [{"type": "READ", "stream": "PRINT", "payload": "cat {path}"}]}
+            {"cat": [{"type": "READ", "stream": "PRINT", "payload": "cat {path}"}]},
         )
 
         result = empty_gtfo.find_binary("/usr/bin/cat")
@@ -99,7 +99,7 @@ class TestGtfobinsRegistry:
 
     def test_find_binary_cap_mismatch_raises(self, empty_gtfo):
         empty_gtfo.parse_binary_data(
-            {"cat": [{"type": "READ", "stream": "PRINT", "payload": "cat {path}"}]}
+            {"cat": [{"type": "READ", "stream": "PRINT", "payload": "cat {path}"}]},
         )
 
         with pytest.raises(BinaryNotFound):

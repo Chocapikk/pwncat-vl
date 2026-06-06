@@ -10,7 +10,8 @@ pwncat.
 import functools
 import subprocess
 from io import TextIOWrapper
-from typing import IO, Union, Callable, Optional
+from typing import IO, Union
+from collections.abc import Callable
 
 import pwncat.subprocess
 from pwncat.db import Fact
@@ -20,9 +21,9 @@ from pwncat.platform.linux import LinuxReader, LinuxWriter
 
 def build_gtfo_ability(
     source: str,
-    uid: Union[int, str],
+    uid: int | str,
     method: "pwncat.gtfobins.MethodWrapper",
-    source_uid: Optional[Union[int, str]] = None,
+    source_uid: int | str | None = None,
     **kwargs,
 ) -> Union["GTFOFileRead", "GTFOFileWrite", "GTFOExecute"]:
     r"""Build a escalation ability from a GTFOBins method. This will return
@@ -43,7 +44,7 @@ def build_gtfo_ability(
 
     if method.cap == Capability.READ:
         return GTFOFileRead(
-            source=source, source_uid=source_uid, uid=uid, method=method, **kwargs
+            source=source, source_uid=source_uid, uid=uid, method=method, **kwargs,
         )
     if method.cap == Capability.WRITE:
         return GTFOFileWrite(
@@ -56,7 +57,7 @@ def build_gtfo_ability(
         )
     if method.cap == Capability.SHELL:
         return GTFOExecute(
-            source=source, source_uid=source_uid, uid=uid, method=method, **kwargs
+            source=source, source_uid=source_uid, uid=uid, method=method, **kwargs,
         )
 
 
@@ -72,7 +73,7 @@ class FileReadAbility(Fact):
     """
 
     def __init__(
-        self, source: str, source_uid: Optional[Union[int, str]], uid: Union[int, str]
+        self, source: str, source_uid: int | str | None, uid: int | str,
     ):
         super().__init__(types=["ability.file.read"], source=source)
 
@@ -106,7 +107,7 @@ class FileWriteAbility(Fact):
     """
 
     def __init__(
-        self, source: str, source_uid: Optional[Union[int, str]], uid: Union[int, str]
+        self, source: str, source_uid: int | str | None, uid: int | str,
     ):
         super().__init__(types=["ability.file.write"], source=source)
 
@@ -140,7 +141,7 @@ class ExecuteAbility(Fact):
     """
 
     def __init__(
-        self, source: str, source_uid: Optional[Union[int, str]], uid: Union[int, str]
+        self, source: str, source_uid: int | str | None, uid: int | str,
     ):
         super().__init__(types=["ability.execute"], source=source)
 
@@ -148,7 +149,7 @@ class ExecuteAbility(Fact):
         self.uid = uid
 
     def shell(
-        self, session: "pwncat.manager.Session"
+        self, session: "pwncat.manager.Session",
     ) -> Callable[["pwncat.manager.Session"], None]:
         """Replace the current shell with a new shell as the identified user
 
@@ -170,7 +171,7 @@ class SpawnAbility(Fact):
     """
 
     def __init__(
-        self, source: str, source_uid: Optional[Union[int, str]], uid: Union[int, str]
+        self, source: str, source_uid: int | str | None, uid: int | str,
     ):
         super().__init__(types=["ability.spawn"], source=source)
 
@@ -204,8 +205,8 @@ class GTFOFileRead(FileReadAbility):
     def __init__(
         self,
         source: str,
-        source_uid: Optional[Union[int, str]],
-        uid: Union[int, str],
+        source_uid: int | str | None,
+        uid: int | str,
         method: "pwncat.gtfobins.MethodWrapper",
         **kwargs,
     ):
@@ -231,7 +232,7 @@ class GTFOFileRead(FileReadAbility):
 
         # Build the payload
         payload, input_data, exit_cmd = self.method.build(
-            gtfo=session.platform.gtfo, lfile=path, **self.kwargs
+            gtfo=session.platform.gtfo, lfile=path, **self.kwargs,
         )
 
         # Send the command to the victim with the input and setup stdio pipes
@@ -247,7 +248,7 @@ class GTFOFileRead(FileReadAbility):
         raw_reader = LinuxReader(
             popen,
             on_close=lambda filp: filp.popen.platform.channel.send(
-                exit_cmd.encode("utf-8")
+                exit_cmd.encode("utf-8"),
             ),
             name=path,
         )
@@ -301,8 +302,8 @@ class GTFOFileWrite(FileWriteAbility):
     def __init__(
         self,
         source: str,
-        source_uid: Optional[Union[int, str]],
-        uid: Union[int, str],
+        source_uid: int | str | None,
+        uid: int | str,
         method: "pwncat.gtfobins.MethodWrapper",
         **kwargs,
     ):
@@ -328,7 +329,7 @@ class GTFOFileWrite(FileWriteAbility):
 
         # Build the payload
         payload, input_data, exit_cmd = self.method.build(
-            gtfo=session.platform.gtfo, lfile=path, **self.kwargs
+            gtfo=session.platform.gtfo, lfile=path, **self.kwargs,
         )
 
         # Send the command to the victim with the input and setup stdio pipes
@@ -344,7 +345,7 @@ class GTFOFileWrite(FileWriteAbility):
         raw_writer = LinuxWriter(
             popen,
             on_close=lambda filp: filp.popen.platform.channel.send(
-                exit_cmd.encode("utf-8")
+                exit_cmd.encode("utf-8"),
             ),
             name=path,
         )
@@ -398,8 +399,8 @@ class GTFOExecute(ExecuteAbility):
     def __init__(
         self,
         source: str,
-        source_uid: Optional[Union[int, str]],
-        uid: Union[int, str],
+        source_uid: int | str | None,
+        uid: int | str,
         method: "pwncat.gtfobins.MethodWrapper",
         **kwargs,
     ):
@@ -424,7 +425,7 @@ class GTFOExecute(ExecuteAbility):
         """Emulate the `platform.run` method for execution as another user"""
 
         return session.platform.run(
-            *args, **kwargs, popen_class=functools.partial(self.Popen, session)
+            *args, **kwargs, popen_class=functools.partial(self.Popen, session),
         )
 
     def shell(self, session):
@@ -439,7 +440,7 @@ class GTFOExecute(ExecuteAbility):
 
         # Construct the GTFObins payload
         payload, input_data, exit_cmd = self.method.build(
-            gtfo=session.platform.gtfo, shell=full_command, **self.kwargs
+            gtfo=session.platform.gtfo, shell=full_command, **self.kwargs,
         )
 
         # Send the payload
@@ -449,7 +450,7 @@ class GTFOExecute(ExecuteAbility):
         session.platform.channel.send(input_data)
 
         return lambda session: session.platform.channel.send(
-            exit_cmd.encode("utf-8") + b"\n"
+            exit_cmd.encode("utf-8") + b"\n",
         )
 
     def title(self, session):

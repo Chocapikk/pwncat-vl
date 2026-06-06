@@ -56,7 +56,7 @@ class Module(EnumerateModule):
                         observed.append(line)
 
                         yield PotentialPassword(
-                            self.name, password, implant.log, lineno, user_info.id
+                            self.name, password, implant.log, lineno, user_info.id,
                         )
             except (FileNotFoundError, PermissionError):
                 pass

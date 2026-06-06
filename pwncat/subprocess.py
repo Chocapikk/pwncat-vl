@@ -14,7 +14,7 @@ subprocess module.
 
 """
 
-from typing import IO, List, Optional
+from typing import IO
 from subprocess import (  # noqa: F401
     PIPE,
     DEVNULL,
@@ -59,7 +59,7 @@ class Popen:
     is a byte stream. If the stderr argument was not PIPE, this
     attribute is None.
     """
-    args: List[str]
+    args: list[str]
     """
     The args argument as it was passed to Popen – a sequence of
     program arguments or else a single string.
@@ -81,7 +81,7 @@ class Popen:
         self.stdout = None
         self.stdin = None
 
-    def poll(self) -> Optional[int]:
+    def poll(self) -> int | None:
         """Check if the child process has terminated. Set and return
         ``returncode`` attribute. Otherwise, returns None."""
 

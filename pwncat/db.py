@@ -7,7 +7,6 @@ on how to create persistent classes, please see the ZODB
 documentation.
 """
 
-from typing import Optional
 
 import persistent
 from persistent.list import PersistentList
@@ -22,9 +21,9 @@ class Binary(persistent.Persistent):
     def __init__(self, name, path):
 
         # Name of the binary (parameter to which)
-        self.name: Optional[str] = name
+        self.name: str | None = name
         # The path to the binary on the remote host
-        self.path: Optional[str] = path
+        self.path: str | None = path
 
 
 class Fact(Result, persistent.Persistent):

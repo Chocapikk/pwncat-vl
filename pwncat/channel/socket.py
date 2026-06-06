@@ -21,7 +21,6 @@ import errno
 import fcntl
 import socket
 import functools
-from typing import Optional
 
 from pwncat.channel import Channel, ChannelError, ChannelClosed
 
@@ -51,7 +50,7 @@ class Socket(Channel):
     def __init__(self, client: socket.socket = None, **kwargs):
 
         if isinstance(client, str):
-            raise ChannelError(self, f"expected socket object not {repr(type(client))}")
+            raise ChannelError(self, f"expected socket object not {type(client)!r}")
 
         if client is not None:
             # Report host and port number to base channel
@@ -116,7 +115,7 @@ class Socket(Channel):
         return len(data)
 
     @connect_required
-    def recv(self, count: Optional[int] = None) -> bytes:
+    def recv(self, count: int | None = None) -> bytes:
         """Basic socket recv wrapper. This also uses the default
         ``peek`` implementation. This could be optimized to use
         the socket native ``peek`` method.

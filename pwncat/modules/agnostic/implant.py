@@ -20,7 +20,7 @@ class Module(BaseModule):
         "list": Argument(Bool, default=False, help="list installed implants"),
         "remove": Argument(Bool, default=False, help="remove installed implants"),
         "escalate": Argument(
-            Bool, default=False, help="escalate using an installed local implant"
+            Bool, default=False, help="escalate using an installed local implant",
         ),
     }
 
@@ -94,12 +94,12 @@ class Module(BaseModule):
                     nremoved += 1
                 except ModuleFailed:
                     session.log(
-                        f"[red]error[/red]: removal failed: {implant.title(session)}"
+                        f"[red]error[/red]: removal failed: {implant.title(session)}",
                     )
             elif escalate:
                 try:
                     yield Status(
-                        f"attempting escalation with: {implant.title(session)}"
+                        f"attempting escalation with: {implant.title(session)}",
                     )
                     result = implant.escalate(session)
 
@@ -112,7 +112,7 @@ class Module(BaseModule):
                         session.platform.refresh_uid()
 
                     session.log(
-                        f"escalation [green]succeeded[/green] with: {implant.title(session)}"
+                        f"escalation [green]succeeded[/green] with: {implant.title(session)}",
                     )
                     break
                 except ModuleFailed:

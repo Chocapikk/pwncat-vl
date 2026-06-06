@@ -41,7 +41,7 @@ class CVE_2017_5618(ExecuteAbility):
         # Compile the rootshell binary
         try:
             rootshell = session.platform.compile(
-                [StringIO(rootshell_source)], output=rootshell
+                [StringIO(rootshell_source)], output=rootshell,
             )
         except PlatformError as exc:
             raise ModuleFailed(f"compilation failed: {exc}") from exc

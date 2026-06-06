@@ -3,8 +3,8 @@ Windows-specific facts which are used in multiple places throughout the framewor
 """
 
 from enum import IntFlag
-from typing import Callable, Optional
 from datetime import datetime
+from collections.abc import Callable
 
 import pwncat
 from pwncat.facts import Fact, User, Group, ExecuteAbility
@@ -66,7 +66,7 @@ class UserToken(ExecuteAbility):
 
         user = session.find_user(uid=self.uid)
         if user is None:
-            user_name = f"SID({repr(self.uid)})"
+            user_name = f"SID({self.uid!r})"
         else:
             user_name = user.name
 
@@ -75,7 +75,7 @@ class UserToken(ExecuteAbility):
         return f"[blue]{user_name}[/blue] Token: {self.token}"
 
     def shell(
-        self, session: "pwncat.manager.Session"
+        self, session: "pwncat.manager.Session",
     ) -> Callable[["pwncat.manager.Session"], None]:
         """Execute a new shell as the specified user. In this case, just impersonate the user."""
 
@@ -132,45 +132,44 @@ class WindowsUser(User):
         source: str,
         name: str,
         uid: str,
-        account_expires: Optional[datetime],
+        account_expires: datetime | None,
         description: str,
         enabled: bool,
         full_name: str,
-        password_changeable_date: Optional[datetime],
-        password_expires: Optional[datetime],
+        password_changeable_date: datetime | None,
+        password_expires: datetime | None,
         user_may_change_password: bool,
         password_required: bool,
-        password_last_set: Optional[datetime],
-        last_logon: Optional[datetime],
+        password_last_set: datetime | None,
+        last_logon: datetime | None,
         principal_source: str,
-        password: Optional[str] = None,
-        hash: Optional[str] = None,
+        password: str | None = None,
+        hash: str | None = None,
         well_known: bool = False,
     ):
         super().__init__(
-            source=source, name=name, uid=uid, password=password, hash=hash
+            source=source, name=name, uid=uid, password=password, hash=hash,
         )
 
-        self.account_expires: Optional[datetime] = account_expires
+        self.account_expires: datetime | None = account_expires
         self.user_description: str = description
         self.enabled: bool = enabled
         self.full_name: str = full_name
-        self.password_changeable_date: Optional[datetime] = password_changeable_date
-        self.password_expires: Optional[datetime] = password_expires
+        self.password_changeable_date: datetime | None = password_changeable_date
+        self.password_expires: datetime | None = password_expires
         self.user_may_change_password: bool = user_may_change_password
         self.password_required: bool = password_required
-        self.password_last_set: Optional[datetime] = password_last_set
-        self.last_logon: Optional[datetime] = last_logon
+        self.password_last_set: datetime | None = password_last_set
+        self.last_logon: datetime | None = last_logon
         self.principal_source: str = principal_source
         self.hidden: bool = well_known
 
     def __repr__(self):
         if self.password is None and self.hash is None:
-            return f"""User(uid={self.id}, name={repr(self.name)})"""
-        elif self.password is not None:
-            return f"""User(uid={repr(self.id)}, name={repr(self.name)}, password={repr(self.password)})"""
-        else:
-            return f"""User(uid={repr(self.id)}, name={repr(self.name)}, hash={repr(self.hash)})"""
+            return f"""User(uid={self.id}, name={self.name!r})"""
+        if self.password is not None:
+            return f"""User(uid={self.id!r}, name={self.name!r}, password={self.password!r})"""
+        return f"""User(uid={self.id!r}, name={self.name!r}, hash={self.hash!r})"""
 
 
 class WindowsGroup(Group):
@@ -198,10 +197,10 @@ class WindowsGroup(Group):
         description: str,
         principal_source: str,
         members: list[str],
-        domain: Optional[str] = None,
+        domain: str | None = None,
     ):
         super().__init__(source=source, name=name, gid=gid, members=members)
 
         self.group_description: str = description
         self.principal_source: str = principal_source
-        self.domain: Optional[str] = domain
+        self.domain: str | None = domain

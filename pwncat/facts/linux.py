@@ -3,7 +3,6 @@ Linux specific facts which are used in multiple places throughout
 the framework.
 """
 
-from typing import Optional
 
 from pwncat.facts import User, Group
 
@@ -37,13 +36,13 @@ class LinuxUser(User):
         self,
         source: str,
         name: str,
-        hash: Optional[str],
+        hash: str | None,
         uid: int,
         gid: int,
         comment: str,
         home: str,
         shell: str,
-        password: Optional[str] = None,
+        password: str | None = None,
     ):
 
         # Normally, the hash is only stored in /etc/shadow
@@ -81,10 +80,10 @@ class LinuxGroup(Group):
         self,
         source: str,
         group_name: str,
-        hash: Optional[str],
+        hash: str | None,
         gid: int,
         members: list[int],
-        password: Optional[str] = None,
+        password: str | None = None,
     ):
 
         # We've never seen a group password hash, but those apparently exist????

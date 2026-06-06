@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import Dict
 
 import pwncat
 from pwncat.db import Fact
@@ -9,7 +8,7 @@ from pwncat.modules.enumerate import Schedule, EnumerateModule
 
 
 class DomainObject(Fact):
-    def __init__(self, source: str, data: Dict, sid: str):
+    def __init__(self, source: str, data: dict, sid: str):
         super().__init__(source=source, types=["domain.details"])
 
         self.domain = data
@@ -28,9 +27,9 @@ class DomainObject(Fact):
 
         output.append(f"Forest: [cyan]{self['Forest']['Name']}[/cyan]")
         output.append(
-            f"Domain Controllers: [cyan]{'[/cyan][cyan]'.join(self['DomainControllers'])}[/cyan]"
+            f"Domain Controllers: [cyan]{'[/cyan][cyan]'.join(self['DomainControllers'])}[/cyan]",
         )
-        output.append(f"SID: {repr(self.sid)}")
+        output.append(f"SID: {self.sid!r}")
 
         return "\n".join(output)
 

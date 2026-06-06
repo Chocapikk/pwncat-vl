@@ -24,7 +24,7 @@ specific to your module or command.
 import os
 import copy
 import ipaddress
-from typing import Any, Union
+from typing import Any
 
 from prompt_toolkit.keys import ALL_KEYS, Keys
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES
@@ -55,7 +55,7 @@ class KeyType:
         self.name = name
 
     def __repr__(self):
-        return f"Key(name={repr(self.name)})"
+        return f"Key(name={self.name!r})"
 
     def __bytes__(self):
         return self.value
@@ -87,7 +87,7 @@ def bool_type(value: str) -> bool:
     value = value.lower()
     if value == "1" or value == "true" or value == "on":
         return True
-    elif value == "0" or value == "false" or value == "off":
+    if value == "0" or value == "false" or value == "off":
         return False
 
     raise ValueError(f"{value}: expected boolean value")
@@ -143,7 +143,7 @@ class Config:
 
         return new
 
-    def binding(self, name_or_value: Union[str, bytes]) -> str:
+    def binding(self, name_or_value: str | bytes) -> str:
         """Get a key binding by it's key name or key value."""
 
         if isinstance(name_or_value, bytes):

@@ -57,7 +57,7 @@ class Module(pwncat.modules.BaseModule):
             help="List of enumeration types to collect (default: all)",
         ),
         "clear": pwncat.modules.Argument(
-            bool, default=False, help="Clear the cached results of all matching modules"
+            bool, default=False, help="Clear the cached results of all matching modules",
         ),
         "cache": pwncat.modules.Argument(
             bool,
@@ -81,7 +81,7 @@ class Module(pwncat.modules.BaseModule):
         modules = set()
         for name in module_names:
             modules = modules | set(
-                list(session.find_module(f"enumerate.{name}", base=EnumerateModule))
+                list(session.find_module(f"enumerate.{name}", base=EnumerateModule)),
             )
 
         if exclude is not None and exclude:
@@ -156,4 +156,4 @@ class Module(pwncat.modules.BaseModule):
                             else:
                                 yield Status(item.title(session))
             except ModuleFailed as exc:
-                session.log(f"[red]{module.name}[/red]: {str(exc)}")
+                session.log(f"[red]{module.name}[/red]: {exc!s}")
