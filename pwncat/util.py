@@ -117,10 +117,14 @@ def isprintable(data) -> bool:
 
 
 def human_readable_size(size, decimal_places=2):
+    # The suffixes (KiB/MiB/...) are IEC binary units, so we must
+    # divide by 1024, not 1000. Mixing the two scales (decimal
+    # threshold with binary suffix) produced inflated displays for
+    # values close to a power-of-two boundary.
     for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
-        if size < 1000.0:
+        if size < 1024:
             return f"{size:.{decimal_places}f}{unit}"
-        size /= 1000.0
+        size /= 1024
     return f"{size:.{decimal_places}f}{unit}"
 
 
@@ -132,8 +136,10 @@ def human_readable_delta(seconds):
     if seconds < 60:
         return f"{seconds:.2f} seconds"
 
+    # Cast intermediate quotients to int so float inputs (e.g. 3661.5)
+    # don't leak ``1.0 minutes`` style noise into the rendered string.
     output = [f"{int(seconds % 60)} seconds"]
-    minutes = seconds // 60
+    minutes = int(seconds // 60)
     output.append(f"{minutes % 60} minutes")
 
     if minutes < 60:
@@ -156,11 +162,19 @@ def join(argv: list[str]):
 def quote(token: str):
     """Quote the token much like shlex.quote, except don't use single quotes
     this will escape any double quotes in the string and wrap it in double
-    quotes. If there are no spaces, it returns the string unchanged."""
+    quotes. If there are no spaces and no shell metacharacters that need
+    escaping, it returns the string unchanged."""
+
+    # A token without whitespace and without an embedded double quote can
+    # be passed through unchanged. Embedded double quotes always require
+    # quoting or they would unbalance the surrounding shell parser.
+    needs_quoting = False
     for c in token:
-        if c in string.whitespace:
+        if c in string.whitespace or c == '"':
+            needs_quoting = True
             break
-    else:
+
+    if not needs_quoting:
         return token
 
     return '"' + token.replace('"', '\\"') + '"'

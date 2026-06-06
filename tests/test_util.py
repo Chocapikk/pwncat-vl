@@ -18,33 +18,56 @@ class TestHumanReadableSize:
     def test_bytes(self):
         assert util.human_readable_size(500) == "500.00B"
 
-    def test_kilobytes(self):
-        assert util.human_readable_size(2048) == "2.05KiB"
+    def test_exact_kibibyte(self):
+        # Regression: previously divided by 1000 while showing KiB suffix,
+        # so 1024 rendered as "1.02KiB" instead of "1.00KiB".
+        assert util.human_readable_size(1024) == "1.00KiB"
+
+    def test_kibibyte_with_remainder(self):
+        # 2048 bytes is exactly 2 KiB; the old impl returned "2.05KiB"
+        # (2048 / 1000 = 2.048).
+        assert util.human_readable_size(2048) == "2.00KiB"
 
     def test_megabytes(self):
-        assert util.human_readable_size(5_000_000) == "5.00MiB"
+        # 5 * 1024 * 1024 == 5 MiB exactly
+        assert util.human_readable_size(5 * 1024 * 1024) == "5.00MiB"
+
+    def test_below_1024_keeps_bytes(self):
+        # Old impl switched to KiB at 1000; 1023 must still be bytes.
+        assert util.human_readable_size(1023) == "1023.00B"
 
     def test_zero(self):
         assert util.human_readable_size(0) == "0.00B"
 
     def test_custom_decimal_places(self):
-        assert util.human_readable_size(1500, decimal_places=0) == "2KiB"
+        assert util.human_readable_size(1500, decimal_places=0) == "1KiB"
 
 
 class TestHumanReadableDelta:
     def test_under_a_minute(self):
         assert util.human_readable_delta(42) == "42.00 seconds"
 
-    def test_minutes_and_seconds(self):
-        result = util.human_readable_delta(125)
-        assert "minutes" in result
-        assert "seconds" in result
+    def test_minutes_and_seconds_integer_input(self):
+        # 2 minutes and 5 seconds, integer input keeps int formatting
+        assert util.human_readable_delta(125) == "2 minutes and 5 seconds"
+
+    def test_float_input_does_not_leak_decimals(self):
+        # Regression: float input used to render as ``1.0 minutes`` because
+        # ``minutes = seconds // 60`` returns a float on a float ``seconds``.
+        result = util.human_readable_delta(125.0)
+        assert "1.0" not in result
+        assert "minutes" in result and "seconds" in result
 
     def test_hours_minutes_seconds(self):
+        # 3h 12m 7s
         result = util.human_readable_delta(3 * 3600 + 12 * 60 + 7)
+        assert result == "3 hours, 12 minutes and 7 seconds"
+
+    def test_hours_float_input(self):
+        # 1h 1m 1s as float - must still render with int components
+        result = util.human_readable_delta(3661.0)
+        assert "1.0" not in result
         assert "hours" in result
-        assert "minutes" in result
-        assert "seconds" in result
 
 
 class TestQuote:
@@ -56,6 +79,14 @@ class TestQuote:
 
     def test_existing_double_quote_is_escaped(self):
         assert util.quote('say "hi"') == '"say \\"hi\\""'
+
+    def test_double_quote_without_whitespace_is_escaped(self):
+        # Regression: previously a token like ``a"b`` was returned
+        # unchanged, breaking the surrounding shell command (``KEY=a"b``)
+        # because the embedded quote unbalanced the parser. The function
+        # must now quote+escape any embedded double quote even without
+        # whitespace.
+        assert util.quote('a"b') == '"a\\"b"'
 
     def test_empty_string(self):
         assert util.quote("") == ""

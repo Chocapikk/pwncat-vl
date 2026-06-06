@@ -179,10 +179,7 @@ class ChannelFile(RawIOBase):
         if self.eof:
             return 0
 
-        # Check the type of the argument, and grab the relevant part
-        obj = b.obj if isinstance(b, memoryview) else b
         n = 0
-
         while n == 0:
             try:
                 n = self.channel.recvinto(b)
@@ -231,9 +228,6 @@ class ChannelFile(RawIOBase):
                     self.close()
                     return n
 
-        if n == 0:
-            return None
-
         return n
 
     def write(self, data: bytes):
@@ -248,7 +242,10 @@ class ChannelFile(RawIOBase):
 
         written = 0
         while written < len(data):
-            written += self.channel.send(data)
+            # ``send`` may return a short count if the underlying
+            # channel performs a partial write; only push the
+            # bytes that have not been sent yet.
+            written += self.channel.send(data[written:])
 
         return written
 
