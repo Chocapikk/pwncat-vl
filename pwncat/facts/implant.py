@@ -9,7 +9,7 @@ Lastly, a remote implant allows pwncat to reconnect to the target.
 """
 
 import enum
-from typing import List, Union, Callable
+from typing import Union, Callable
 
 import pwncat
 from pwncat.db import Fact

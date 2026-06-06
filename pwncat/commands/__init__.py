@@ -47,9 +47,9 @@ import argparse
 import importlib.util
 from io import TextIOWrapper
 from enum import Enum, auto
-from typing import Dict, List, Type, Callable
-from collections.abc import Iterable
+from typing import Callable
 from functools import partial
+from collections.abc import Iterable
 
 import rich.text
 from pygments import token

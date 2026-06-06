@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from typing import List
 
 from rich.prompt import Prompt
 
@@ -53,7 +52,7 @@ class Module(BaseModule):
 
             console.print("Found the following implants:")
             for i, implant in enumerate(implants):
-                console.print(f"{i+1}. {implant.title(session)}")
+                console.print(f"{i + 1}. {implant.title(session)}")
 
             if remove:
                 prompt = "Which should we remove (e.g. '1 2 4', default: all)? "

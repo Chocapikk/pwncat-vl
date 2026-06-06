@@ -979,8 +979,6 @@ def register(platform: Type[Platform]):
     :type platform: Type[Platform]
     """
 
-    global PLATFORM_TYPES
-
     PLATFORM_TYPES[platform.name] = platform
 
 
@@ -994,8 +992,6 @@ def find(name: str) -> Type[Platform]:
     :rtype: Type[Platform]
     :raises: KeyError: if the specified platform does not exist
     """
-
-    global PLATFORM_TYPES
 
     return PLATFORM_TYPES[name]
 

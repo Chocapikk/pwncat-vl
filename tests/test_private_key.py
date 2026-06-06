@@ -8,7 +8,7 @@ tests stay deterministic and do not rely on any fixture key on disk.
 
 import pytest
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ed25519, rsa
+from cryptography.hazmat.primitives.asymmetric import rsa, ed25519
 
 from pwncat.modules.linux.enumerate.creds.private_key import _classify_key
 

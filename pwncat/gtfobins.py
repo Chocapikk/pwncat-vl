@@ -8,12 +8,11 @@ binaries can be seen in ``pwncat/data/gtfobins.json``.
 """
 
 import os
+import json
 import shlex
 from enum import Flag, auto
-from typing import IO, Any, Dict, List, Tuple, BinaryIO, Callable
+from typing import IO, Any, BinaryIO, Callable
 from collections.abc import Generator
-
-import json
 
 
 class ControlCodes:

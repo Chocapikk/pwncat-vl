@@ -8,12 +8,12 @@ actually work at runtime, not just at import time.
 import io
 import os
 import tempfile
+from importlib.resources import files as _pkg_files
 
-import psutil
 import ZODB
+import psutil
 import ZODB.FileStorage
 import ZODB.MappingStorage
-from importlib.resources import files as _pkg_files
 
 
 class TestImportlibResources:

@@ -36,7 +36,7 @@ class SELinuxState(Fact):
     def description(self, session):
         width = max(len(x) for x in self.status) + 1
         return "\n".join(
-            f"{key+':':{width}} {value}" for key, value in self.status.items()
+            f"{key + ':':{width}} {value}" for key, value in self.status.items()
         )
 
 

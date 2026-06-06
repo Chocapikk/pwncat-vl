@@ -3,7 +3,7 @@ Windows-specific facts which are used in multiple places throughout the framewor
 """
 
 from enum import IntFlag
-from typing import List, Callable, Optional
+from typing import Callable, Optional
 from datetime import datetime
 
 import pwncat

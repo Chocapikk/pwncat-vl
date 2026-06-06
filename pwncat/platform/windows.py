@@ -676,7 +676,7 @@ function prompt {
         # Write remaining chunks to selected path
         for c in range(chunk_sz, len(loader_dll), chunk_sz):
             self.channel.send(
-                f"""echo {loader_dll[c:c+chunk_sz].decode('utf-8')} >>"{str(loader_remote_path)}"\n""".encode(
+                f"""echo {loader_dll[c:c + chunk_sz].decode('utf-8')} >>"{str(loader_remote_path)}"\n""".encode(
                     "utf-8"
                 )
             )

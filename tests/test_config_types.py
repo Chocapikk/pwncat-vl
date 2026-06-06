@@ -8,14 +8,13 @@ functions so we can exercise them without spinning up a Manager.
 """
 
 import os
-import tempfile
 
 import pytest
 
 from pwncat.config import (
     KeyType,
-    bool_type,
     key_type,
+    bool_type,
     local_dir_type,
     local_file_type,
 )

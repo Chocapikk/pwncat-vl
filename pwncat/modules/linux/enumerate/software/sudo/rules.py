@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import re
-from typing import List, Optional
+from typing import Optional
 
 import rich.markup
 

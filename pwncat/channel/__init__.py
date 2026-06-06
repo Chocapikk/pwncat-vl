@@ -17,7 +17,7 @@ to the constructor for the appropriate channel type.
 import time
 from io import DEFAULT_BUFFER_SIZE, RawIOBase, BufferedReader, BufferedWriter
 from abc import ABC, abstractmethod
-from typing import Type, Union, Optional
+from typing import Union, Optional
 
 import pwncat
 

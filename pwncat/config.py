@@ -24,7 +24,7 @@ specific to your module or command.
 import os
 import copy
 import ipaddress
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from prompt_toolkit.keys import ALL_KEYS, Keys
 from prompt_toolkit.input.ansi_escape_sequences import REVERSE_ANSI_SEQUENCES

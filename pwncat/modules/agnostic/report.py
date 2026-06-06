@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import datetime
-from typing import List
 
 import jinja2
 from rich.markdown import Markdown

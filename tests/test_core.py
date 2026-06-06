@@ -8,7 +8,6 @@ import os
 import tempfile
 
 
-
 class TestConfig:
     """Test configuration parsing and defaults."""
 

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import io
 import hashlib
-from pwncat.subprocess import CalledProcessError
 from importlib.resources import files as _pkg_files
 
 import pwncat
 from pwncat.facts import Implant, CreatedFile
 from pwncat.modules import Status, Argument, ModuleFailed
 from pwncat.platform import PlatformError
+from pwncat.subprocess import CalledProcessError
 from pwncat.platform.linux import Linux
 from pwncat.modules.implant import ImplantModule
 

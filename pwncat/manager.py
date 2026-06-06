@@ -39,7 +39,7 @@ import contextlib
 import importlib.util
 from io import TextIOWrapper
 from enum import Enum, auto
-from typing import Dict, List, Tuple, Union, Callable, Optional
+from typing import Union, Callable, Optional
 from collections.abc import Generator
 
 import ZODB

@@ -222,7 +222,7 @@ class PotentialPassword(Fact):
         if self.password is not None:
             result = f"Potential Password [cyan]{rich.markup.escape(repr(self.password))}[/cyan]"
             if self.uid is not None:
-                result += f" for [blue]{rich.markup.escape(session.find_user(uid = self.uid).name)}[/blue]"
+                result += f" for [blue]{rich.markup.escape(session.find_user(uid=self.uid).name)}[/blue]"
             if self.filepath is not None:
                 result += f" ({rich.markup.escape(self.filepath)}:{self.lineno})"
         else:

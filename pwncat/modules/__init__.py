@@ -32,10 +32,9 @@ Example Module
 
 """
 
-import typing
 import inspect
 import functools
-from typing import Any, Dict, Callable, Optional
+from typing import Any, Callable, Optional
 from dataclasses import dataclass
 
 import pwncat
