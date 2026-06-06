@@ -297,7 +297,7 @@ class Listener(threading.Thread):
                     if self.count <= 0:
                         # Drain waiting channels
                         self.manager.log(
-                            "[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[0]}[/cyan]: max session count reached; shutting down",
+                            f"[magenta]listener[/magenta]: [blue]{self.address[0]}[/blue]:[cyan]{self.address[1]}[/cyan]: max session count reached; shutting down",
                         )
                         self._stop_event.set()
 

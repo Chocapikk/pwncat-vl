@@ -21,6 +21,7 @@ import hashlib
 import pathlib
 import secrets
 import tempfile
+import contextlib
 import subprocess
 from io import TextIOWrapper, BufferedIOBase, UnsupportedOperation
 from typing import BinaryIO
@@ -1154,20 +1155,24 @@ class Linux(Platform):
                 for path in local_temps:
                     os.unlink(path)
 
-            # We have a compiled executable. We now need to upload it.
-            os.path.getsize(local_output)
-            with open(local_output, "rb") as source:
-                # Decide on a name
-                if output is not None:
-                    dest = self.open(output, "wb")
-                    remote_path = output
-                else:
-                    # We don't care where it goes, make a tempfile
-                    dest = self.tempfile(suffix=suffix, mode="wb")
-                    remote_path = dest.name
+            # We have a compiled executable. Upload it, then drop the
+            # local copy so we don't leak ``/tmp`` between cross-compiles.
+            try:
+                with open(local_output, "rb") as source:
+                    # Decide on a name
+                    if output is not None:
+                        dest = self.open(output, "wb")
+                        remote_path = output
+                    else:
+                        # We don't care where it goes, make a tempfile
+                        dest = self.tempfile(suffix=suffix, mode="wb")
+                        remote_path = dest.name
 
-                with dest:
-                    shutil.copyfileobj(source, dest)
+                    with dest:
+                        shutil.copyfileobj(source, dest)
+            finally:
+                with contextlib.suppress(FileNotFoundError):
+                    os.unlink(local_output)
 
             try:
                 self.run(["chmod", "+x", remote_path], check=True)

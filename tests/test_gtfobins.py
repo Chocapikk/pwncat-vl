@@ -142,3 +142,51 @@ class TestMethodSudoArgs:
         command, extra = method.sudo_args("/usr/bin/cat", "/usr/bin/cat*")
         assert command == "/usr/bin/cat"
         assert "-n" in extra
+
+    def test_empty_spec_raises_instead_of_index_error(self, empty_gtfo):
+        # Regression: an empty spec used to crash on ``spec[-1]`` lookup
+        # with an IndexError before the SudoNotPossible branch could run.
+        _, method = self._make_method(empty_gtfo)
+        with pytest.raises(SudoNotPossible):
+            method.sudo_args("/usr/bin/cat", "")
+
+
+class TestBuildPayloadSuidAliasing:
+    """Regression: ``build_payload(suid=True)`` used to alias
+    ``self.suid`` and then mutate it via ``args += self.args``,
+    permanently growing the method's ``suid`` list on each call."""
+
+    def _make_gtfo(self, tmp_path):
+        import json
+
+        path = tmp_path / "g.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "cat": [
+                        {
+                            "type": "READ",
+                            "stream": "PRINT",
+                            "payload": "{command}",
+                            "suid": ["-s"],
+                            "args": ["-n"],
+                        },
+                    ],
+                },
+            ),
+        )
+        return GTFOBins(str(path), which=lambda name, **_: f"/usr/bin/{name}")
+
+    def test_method_state_is_stable_across_calls(self, tmp_path):
+        gtfo = self._make_gtfo(tmp_path)
+        method = gtfo.binaries["cat"].methods[0]
+
+        suid_before = list(method.suid)
+        args_before = list(method.args)
+
+        method.build_payload(gtfo, "/usr/bin/cat", suid=True)
+        method.build_payload(gtfo, "/usr/bin/cat", suid=True)
+        method.build_payload(gtfo, "/usr/bin/cat", suid=True)
+
+        assert method.suid == suid_before
+        assert method.args == args_before

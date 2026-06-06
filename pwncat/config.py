@@ -136,7 +136,12 @@ class Config:
 
         new = Config()
 
-        new.values = copy.copy(self.values)
+        # ``self.values`` is a dict-of-dicts (``{name: {"value": ..., "type": ...}}``).
+        # A shallow copy of the outer dict still shares the inner per-entry
+        # dicts, so mutating ``new.values[name]["value"]`` via ``set`` would
+        # leak back into the original Config. Duplicate each entry so the
+        # copy is truly independent.
+        new.values = {name: copy.copy(entry) for name, entry in self.values.items()}
         new.locals = copy.copy(self.locals)
         new.module = self.module
         new.bindings = copy.copy(self.bindings)

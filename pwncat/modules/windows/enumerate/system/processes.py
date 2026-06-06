@@ -78,7 +78,7 @@ class ProcessData(Fact):
         if self.state == 7:
             state = "[red]terminated[/red]"
         elif self.state == 8:
-            state = "[yellow]stopped[/red]"
+            state = "[yellow]stopped[/yellow]"
 
         if self.owner is None:
             color = "yellow"

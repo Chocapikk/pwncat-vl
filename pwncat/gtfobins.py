@@ -111,6 +111,11 @@ class Method:
             # We can run anything, so just return all arguments
             return binary_path, self.args
 
+        # An empty spec cannot match any binary; treat as a mismatch
+        # instead of crashing on ``spec[-1]`` below.
+        if not spec:
+            raise SudoNotPossible
+
         # Split the sudo command specification
         args = shlex.split(spec.rstrip("*"))
 
@@ -181,8 +186,11 @@ class Method:
             )
             command = f"sudo -u {user} " + command + " " + args
         else:
+            # Build a fresh list so we never accidentally mutate
+            # ``self.suid`` (which would compound across calls when the
+            # caller uses ``suid=True``).
             if suid and self.suid:
-                args = self.suid
+                args = list(self.suid)
             else:
                 args = []
             args += self.args or []
