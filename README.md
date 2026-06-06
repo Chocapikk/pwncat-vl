@@ -16,13 +16,16 @@ The original project has been unmaintained since 2021, and despite community int
 Rather than let the project fade away, this fork was created to **fix critical issues, restore compatibility, and keep contributions alive**.
 
 ### Key changes in this fork:
-- Python **3.9 to 3.14** compatibility (tested in CI)
-- **Busybox/Alpine PTY support** - automatically uploads a minimal static binary to spawn a real PTY on systems that lack `script`, `python`, and other standard tools (supports x86_64, aarch64, i686, armv7l)
-- Replaced deprecated dependencies (`netifaces` -> `psutil`, `zodburi` -> direct ZODB, `pkg_resources` -> `importlib.resources`)
-- Fixed critical bugs (resource leaks, broken error handling, shell injection)
-- Updated dependencies for modern environments
-- 46+ unit tests running across all supported Python versions
-- Active maintenance (contributions welcome!)
+- **Python 3.9 to 3.14** support
+- **Busybox/Alpine PTY** - auto-spawns a real PTY on minimal targets (Alpine containers, embedded busybox) where `script` and `python` aren't available, via an embedded ~30KB static `forkpty` helper (x86_64, aarch64, i686, armv7l)
+- **New privesc modules**: PwnKit (CVE-2021-4034) and sudo `-R` NSS-preload (CVE-2025-32463)
+- **Recursive directory download** with a single global progress bar
+- **`remember` command** to store and retrieve arbitrary key-value pairs during a session (passwords, tokens, paths)
+- **Markdown report export**
+- **SSH**: window-size blocking fix (no more spurious `TimeoutError` on large uploads), agent support, `@` allowed in passwords
+- **XDG-compliant config**: loads `pwncatrc` from `$XDG_CONFIG_HOME/pwncat/` with fallback to `$XDG_DATA_HOME`
+- Stable foundations: modernized dependencies, proper exception chaining, 155+ tests in CI, ~30 correctness fixes since the upstream stopped in 2021
+- Active maintenance, contributions welcome
 
 ---
 
