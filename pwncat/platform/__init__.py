@@ -516,6 +516,16 @@ class Platform(ABC):
                 obj._stat = None
                 return obj
 
+            @classmethod
+            def _from_parsed_parts(cls, drv, root, parts):
+                obj = object.__new__(cls)
+                obj._drv = drv
+                obj._root = root
+                obj._parts = parts
+                obj._target = target
+                obj._stat = None
+                return obj
+
         self.Path = RemotePath
         """ A concrete Path object for this platform conforming to pathlib.Path """
 

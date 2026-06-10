@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **platform/__init__.py, platform/linux.py**: `upload` (and any write-mode `open`) crashed with `AttributeError: 'RemotePath' object has no attribute '_target'` on Python <=3.11 because pathlib's internal `_from_parsed_parts()` bypassed `RemotePath.__new__` when computing `path.parent`. Fixed by overriding `_from_parsed_parts` in `RemotePath` to re-inject `_target`, and by using `self.Path(str(path.parent))` in `linux.py open()` as a belt-and-suspenders guard.
+
 ## [0.6.5] - 2026-06-06
 
 ### Fixed
