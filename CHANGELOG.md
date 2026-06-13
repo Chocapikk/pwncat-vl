@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **platform/__init__.py**: `upload` (and any write-mode `open`) crashed with `AttributeError: 'RemotePath' object has no attribute '_target'` on Python <=3.11. Regression from the move of `_target`/`_stat` from class attributes to `__new__`-only instance attributes: pathlib's internal `_from_parsed_parts()` builds derived paths (`.parent`, `.with_name()`, ...) via `object.__new__(cls)`, bypassing `RemotePath.__new__`, so `_target` was missing. Fixed by restoring `_target`/`_stat` as class-level fallbacks (resolved through normal attribute lookup on those instances) while keeping `__new__` for normal construction and pickle round-trips.
+
 ## [0.6.5] - 2026-06-06
 
 ### Fixed

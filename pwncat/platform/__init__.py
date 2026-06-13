@@ -510,6 +510,17 @@ class Platform(ABC):
         target = self
 
         class RemotePath(base_path, Path):
+            # Class-level fallback for _target/_stat. On Python <=3.11, pathlib
+            # builds derived paths (.parent, .with_name(), ...) via
+            # _from_parsed_parts(), which calls object.__new__(cls) and bypasses
+            # __new__. Keeping these as class attributes lets _target/_stat
+            # resolve through normal attribute lookup on those instances, so
+            # write-mode open() (which does path.parent) no longer raises
+            # AttributeError. __new__ still sets them per-instance for normal
+            # construction and pickle round-trips.
+            _target = target
+            _stat = None
+
             def __new__(cls, *args, **kwargs):
                 obj = super().__new__(cls, *args, **kwargs)
                 obj._target = target
