@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- **platform/__init__.py, platform/linux.py**: `upload` (and any write-mode `open`) crashed with `AttributeError: 'RemotePath' object has no attribute '_target'` on Python <=3.11 because pathlib's internal `_from_parsed_parts()` bypassed `RemotePath.__new__` when computing `path.parent`. Fixed by overriding `_from_parsed_parts` in `RemotePath` to re-inject `_target`, and by using `self.Path(str(path.parent))` in `linux.py open()` as a belt-and-suspenders guard.
+- **platform/__init__.py**: `upload` (and any write-mode `open`) crashed with `AttributeError: 'RemotePath' object has no attribute '_target'` on Python <=3.11. Regression from the move of `_target`/`_stat` from class attributes to `__new__`-only instance attributes: pathlib's internal `_from_parsed_parts()` builds derived paths (`.parent`, `.with_name()`, ...) via `object.__new__(cls)`, bypassing `RemotePath.__new__`, so `_target` was missing. Fixed by restoring `_target`/`_stat` as class-level fallbacks (resolved through normal attribute lookup on those instances) while keeping `__new__` for normal construction and pickle round-trips.
 
 ## [0.6.5] - 2026-06-06
 

@@ -1425,7 +1425,7 @@ class Linux(Platform):
             raise PermissionError(f"Permission Denied: {path!s}")
 
         if "w" in mode:
-            parent = self.Path(str(path.parent))
+            parent = path.parent
 
             if "w" in mode and path.exists() and not path.writable():
                 raise PermissionError(f"Permission Denied: {path!s}")
