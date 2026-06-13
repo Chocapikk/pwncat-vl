@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-13
+
 ### Added
 - **platform auto-detection**: `--platform/-m` now defaults to `auto`, which probes the freshly-connected shell and selects `linux` or `windows` automatically (falling back to `linux` when the shell is silent, preserving the old behaviour). The probe (`pwncat.platform.probe_platform`) sends `uname` / `ver` / `$PSVersionTable` and classifies the reply **on stdout**, so it works over raw reverse shells that do not forward stderr. It recognises POSIX shells (`uname` -> `Linux`/`Darwin`/...), `cmd.exe` (`Microsoft Windows [Version ...]`) and Windows PowerShell / PowerShell 7 (`$PSVersionTable` -> `PSEdition`, the self-announcing `PowerShell` banner, and the command-not-found wording of both 5.1 "the name of a cmdlet" and 6/7 "a name of a cmdlet"). Windows markers are checked before Linux ones so a PowerShell shell on a Linux host (where `uname` prints `Linux`) is still classified as Windows. Pass `linux`/`windows` explicitly to skip the probe.
 

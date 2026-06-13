@@ -11,7 +11,7 @@ addopts = "-v"
 
 [tool.poetry]
 name = "pwncat-vl"
-version = "0.6.5"
+version = "0.7.0"
 description = "Community-maintained fork of pwncat with Python 3.13+ support"
 authors = ["Chocapikk <balgogan@protonmail.com>", "Caleb Stewart <caleb.stewart94@gmail.com>", "John Hammond"]
 readme = "README.md"
