@@ -66,8 +66,13 @@ def main():
     parser.add_argument(
         "--platform",
         "-m",
-        help="Name of the platform to use (default: linux)",
-        default="linux",
+        help=(
+            "Name of the platform to use. Use 'auto' (default) to probe the "
+            "live shell and pick linux or windows automatically. Pass "
+            "'linux' or 'windows' explicitly to skip the probe and force "
+            "the choice."
+        ),
+        default="auto",
     )
     parser.add_argument(
         "--port",

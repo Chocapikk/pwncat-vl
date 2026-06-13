@@ -58,6 +58,147 @@ class PlatformError(Exception):
     """Generic platform error."""
 
 
+_PROBE_MARKER_PREFIX = "PWNCAT_PROBE_"
+
+_WINDOWS_PROBE_MARKERS = (
+    b"Invoke-Expression",
+    b"CommandNotFoundException",
+    b"CmdletBinding",
+    b"is not recognized as the name of a cmdlet",
+    b"is not recognized as a name of a cmdlet",
+    b"is not recognized as an internal or external command",
+    b"Microsoft Windows [",
+    b"PSConsoleHostReadLine",
+    b"PowerShell",
+    b"PSEdition",
+    b"FullyQualifiedErrorId",
+    b"Volume in drive",
+)
+
+_LINUX_PROBE_MARKERS = (
+    b"Linux",
+    b"Darwin",
+    b"FreeBSD",
+    b"OpenBSD",
+    b"NetBSD",
+    b"SunOS",
+)
+
+
+def _classify_probe_output(data) -> str | None:
+    """Classify raw probe output as ``linux``, ``windows``, or ``None`` when
+    the bytes are ambiguous. Windows markers are checked first because a
+    Linux ``uname`` is enough on its own to identify a POSIX shell, while a
+    Windows shell can also surface the literal text ``Linux`` inside a
+    PowerShell error explaining why it cannot find that command."""
+
+    if not data:
+        return None
+
+    if isinstance(data, str):
+        data = data.encode("utf-8", errors="ignore")
+    elif not isinstance(data, (bytes, bytearray)):
+        data = str(data).encode("utf-8", errors="ignore")
+
+    if any(marker in data for marker in _WINDOWS_PROBE_MARKERS):
+        return "windows"
+    if any(marker in data for marker in _LINUX_PROBE_MARKERS):
+        return "linux"
+    return None
+
+
+def probe_platform(channel, timeout: float = 3.0) -> str | None:
+    """Send a small command to ``channel`` and classify the response as a
+    POSIX (``linux``) or Windows shell. Returns ``None`` when the probe is
+    inconclusive so the caller can fall back to a sensible default rather
+    than guess wrong.
+
+    The probe sends both ``uname`` (succeeds on POSIX shells, fails on
+    PowerShell with ``CommandNotFoundException``) and ``ver`` (prints
+    ``Microsoft Windows [Version ...]`` on ``cmd.exe``), wrapped between two
+    random markers so we can recover the response even if the channel has
+    pending banner output."""
+
+    import time
+    import random
+    import string
+
+    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=10))
+    start = f"{_PROBE_MARKER_PREFIX}{suffix}_START".encode()
+    end = f"{_PROBE_MARKER_PREFIX}{suffix}_END".encode()
+
+    # Capture (rather than discard) anything already waiting on the channel.
+    # Some shells announce themselves before running a single command: cmd.exe
+    # prints "Microsoft Windows [Version ...]" and PowerShell prints
+    # "PowerShell 7.x". That banner is a strong platform signal, so we keep it
+    # for a classification fallback instead of draining it away. It also covers
+    # interactive PowerShell over a raw channel, which may never echo command
+    # output at all (PSReadLine stalls waiting on a terminal handshake) -- there
+    # the banner is the only thing we ever see.
+    banner = bytearray()
+    try:
+        while True:
+            chunk = channel.recv(4096)
+            if not chunk:
+                break
+            banner.extend(chunk)
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Each command identifies a platform by what it prints on *stdout*, so we
+    # never depend on a channel forwarding stderr:
+    #   uname           -> "Linux"/"Darwin"/... on any POSIX shell
+    #   ver             -> "Microsoft Windows [Version ...]" on cmd.exe
+    #   $PSVersionTable -> a table with "PSVersion"/"PSEdition" on PowerShell.
+    #                      PowerShell's command-not-found errors go to the error
+    #                      stream (often dropped by raw shells), so we rely on
+    #                      this success-stream output to spot PowerShell.
+    probe = (
+        b"echo " + start + b"\n"
+        + b"uname\n"
+        + b"ver\n"
+        + b"$PSVersionTable\n"
+        + b"echo " + end + b"\n"
+    )
+
+    try:
+        channel.send(probe)
+    except Exception:  # noqa: BLE001
+        return None
+
+    # Collect output until we see the end marker or the timeout elapses.
+    # We deliberately do not use ``channel.recvuntil`` because some
+    # channels block longer than ``timeout`` when nothing arrives.
+    deadline = time.monotonic() + max(0.1, timeout)
+    buffer = bytearray()
+    while time.monotonic() < deadline:
+        chunk = None
+        try:
+            chunk = channel.recv(4096)
+        except Exception:  # noqa: BLE001
+            break
+        if chunk:
+            buffer.extend(chunk)
+            if end in buffer:
+                break
+        else:
+            time.sleep(0.05)
+
+    # Only look at the bytes after the start marker if it shows up. This
+    # avoids classifying on stale banner content.
+    response = bytes(buffer)
+    if start in response:
+        response = response.split(start, 1)[1]
+    if end in response:
+        response = response.split(end, 1)[0]
+
+    # Prefer the isolated command output, then fall back to everything we saw
+    # (banner included) so a self-announcing shell is still classified even
+    # when it never ran our probe commands.
+    seen = bytes(banner) + bytes(buffer)
+    return _classify_probe_output(response) or _classify_probe_output(seen)
+
+
 class Path:
     """
     A Concrete-Path. An instance of this class is bound to a
@@ -1015,6 +1156,10 @@ def create(
     channel creation function and a platform is created around the
     channel.
 
+    When ``platform`` is ``"auto"`` (or ``None``) the channel is probed and
+    the matching platform is selected. The probe falls back to ``linux`` if
+    nothing recognizable comes back, preserving the historical default.
+
     :param platform: the name of the platform to construct
     :type platform: str
     :param channel: the C2 channel to use for communication
@@ -1028,6 +1173,10 @@ def create(
 
     if channel is None:
         channel = pwncat.channel.create(**kwargs)
+
+    if platform in (None, "auto"):
+        detected = probe_platform(channel)
+        platform = detected or "linux"
 
     return find(platform)(channel, log)
 

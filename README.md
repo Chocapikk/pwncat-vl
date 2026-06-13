@@ -198,12 +198,18 @@ pwncat-vl c228fc49e515628a0c13bdc4759a12bf
 pwncat-vl 10.10.10.10
 ```
 
-By default, pwncat **assumes the target platform is Linux**. In order to
-connect to a Windows reverse or bind shell, you must pass the `--platform/-m`
-argument:
+By default (`--platform/-m auto`), pwncat **probes the live shell and selects
+the target platform automatically**. It sends a small `uname` / `ver` /
+`$PSVersionTable` sequence and classifies the reply on stdout as Linux or
+Windows, falling back to Linux when the shell stays silent. Pass `linux` or
+`windows` explicitly to skip the probe and force the choice:
 
 ```shell
-pwncat-vl -m windows 10.10.10.10 4444
+# auto-detect (default) -- handles Linux shells and Windows cmd.exe/PowerShell
+pwncat-vl 10.10.10.10 4444
+
+# force the platform and skip detection
+pwncat-vl -m linux 10.10.10.10 4444
 pwncat-vl -m windows -lp 4444
 ```
 

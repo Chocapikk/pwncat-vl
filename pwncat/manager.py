@@ -525,6 +525,17 @@ class Session:
             # This makes logging work during the constructor
             self.platform = str(channel)
 
+            # Auto-detect when the caller didn't pick a specific platform.
+            # Probe the live channel; fall back to ``linux`` so historical
+            # behaviour is preserved when the target sits silent.
+            if platform in (None, "auto"):
+                detected = pwncat.platform.probe_platform(channel)
+                if detected is not None:
+                    manager.log(
+                        f"auto-detected platform: [cyan]{detected}[/cyan]",
+                    )
+                platform = detected or "linux"
+
             self.platform = pwncat.platform.find(platform)(
                 self,
                 channel,

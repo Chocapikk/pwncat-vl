@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **platform auto-detection**: `--platform/-m` now defaults to `auto`, which probes the freshly-connected shell and selects `linux` or `windows` automatically (falling back to `linux` when the shell is silent, preserving the old behaviour). The probe (`pwncat.platform.probe_platform`) sends `uname` / `ver` / `$PSVersionTable` and classifies the reply **on stdout**, so it works over raw reverse shells that do not forward stderr. It recognises POSIX shells (`uname` -> `Linux`/`Darwin`/...), `cmd.exe` (`Microsoft Windows [Version ...]`) and Windows PowerShell / PowerShell 7 (`$PSVersionTable` -> `PSEdition`, the self-announcing `PowerShell` banner, and the command-not-found wording of both 5.1 "the name of a cmdlet" and 6/7 "a name of a cmdlet"). Windows markers are checked before Linux ones so a PowerShell shell on a Linux host (where `uname` prints `Linux`) is still classified as Windows. Pass `linux`/`windows` explicitly to skip the probe.
+
 ### Fixed
 - **platform/__init__.py**: `upload` (and any write-mode `open`) crashed with `AttributeError: 'RemotePath' object has no attribute '_target'` on Python <=3.11. Regression from the move of `_target`/`_stat` from class attributes to `__new__`-only instance attributes: pathlib's internal `_from_parsed_parts()` builds derived paths (`.parent`, `.with_name()`, ...) via `object.__new__(cls)`, bypassing `RemotePath.__new__`, so `_target` was missing. Fixed by restoring `_target`/`_stat` as class-level fallbacks (resolved through normal attribute lookup on those instances) while keeping `__new__` for normal construction and pickle round-trips.
 

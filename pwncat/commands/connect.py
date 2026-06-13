@@ -48,8 +48,12 @@ class Command(CommandDefinition):
         ),
         "--platform,-m": Parameter(
             Complete.NONE,
-            help="Name of the platform to use (default: linux)",
-            default="linux",
+            help=(
+                "Name of the platform to use. Default 'auto' probes the "
+                "live shell and selects linux/windows automatically; pass "
+                "'linux' or 'windows' to force the choice."
+            ),
+            default="auto",
         ),
         "--port,-p": Parameter(
             Complete.NONE,
