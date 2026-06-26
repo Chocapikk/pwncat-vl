@@ -35,7 +35,7 @@ import pwncat
 import pwncat.channel
 import pwncat.subprocess
 from pwncat import util
-from pwncat.channel import ChannelError
+from pwncat.channel import ChannelError, ChannelTimeout
 from pwncat.gtfobins import Stream, GTFOBins, Capability, MissingBinary
 from pwncat.platform import Path, Platform, PlatformError
 
@@ -583,9 +583,11 @@ class Linux(Platform):
         )
 
         # Drain any shell startup output (e.g. "bash: no job control",
-        # MOTD, or other banners) before sending commands
-        time.sleep(0.2)
-        self.channel.drain()
+        # MOTD, or other banners) before sending commands. We use a
+        # deterministic marker handshake instead of a fixed sleep so that
+        # late-arriving startup output on high-latency links cannot bleed
+        # into the first framed command and desync the parser.
+        self._sync_shell()
 
         # Ensure history is disabled
         self.disable_history()
@@ -658,11 +660,48 @@ class Linux(Platform):
                     # Wait for the new shell to be ready by sending a sync
                     # marker and waiting for it, instead of a fixed sleep.
                     # This drains any startup output (e.g. "no job control").
-                    time.sleep(0.1)
-                    self.channel.drain()
+                    self._sync_shell()
                     break
 
         self.refresh_uid()
+
+    def _sync_shell(self, timeout: float = 10.0):
+        """Deterministically flush shell startup output (job-control
+        banners, MOTD, prompts) by emitting a unique marker and reading
+        until the shell echoes it back.
+
+        The underlying socket is non-blocking, so ``channel.drain()`` only
+        clears whatever bytes have *already* arrived; pairing it with a
+        fixed ``time.sleep`` races late output on high-latency links. When
+        that output arrives after the drain, it bleeds into the first
+        framed command and desyncs the command parser, which then blocks
+        in ``recvuntil`` until it times out and the session is torn down.
+        Waiting for a marker we generated guarantees the shell has finished
+        printing its startup noise regardless of latency.
+
+        Falls back to the previous best-effort sleep+drain if the marker is
+        never seen (e.g. an exotic shell without ``echo``), so this can
+        never regress relative to the old behavior.
+        """
+
+        token = secrets.token_hex(8)
+        marker = ("PWNCAT" + token).encode()
+
+        # Adjacent shell string literals are concatenated, so the command
+        # text (`echo "PWNCAT""<token>"`) differs from its output
+        # (`PWNCAT<token>`). This prevents a false match should the channel
+        # echo the command back to us (e.g. a PTY-backed shell).
+        self.channel.send(b'echo "PWNCAT""' + token.encode() + b'"\n')
+
+        try:
+            self.channel.recvuntil(marker, timeout=timeout)
+            # Consume the trailing newline after the marker echo.
+            self.channel.recvuntil(b"\n", timeout=timeout)
+        except ChannelTimeout:
+            # The marker never came back. Fall back to the legacy
+            # best-effort drain so we degrade gracefully rather than fail.
+            time.sleep(0.2)
+            self.channel.drain()
 
     def exit(self):
         """Exit this session"""
