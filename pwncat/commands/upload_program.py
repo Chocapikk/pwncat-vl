@@ -47,6 +47,40 @@ class Command(CommandDefinition):
             with open(self.DOWNLOAD_DIRECTORY + program, mode="wb") as file:
                 file.write(response.content)
 
+    def _download_prog(self, program: str, progress: Progress = None):
+            """Download a program with optional progress bar."""
+            url = self.DIR[program]
+            filename = os.path.join(self.DOWNLOAD_DIRECTORY, program)
+
+            try:
+                with requests.get(url, stream=True, timeout=10) as response:
+                    response.raise_for_status()
+                    total_size = int(response.headers.get("content-length", 0))
+
+                    if progress:
+                        download_task = progress.add_task(
+                            "[cyan]Downloading...",
+                            filename=program,
+                            total=total_size,
+                        )
+                        progress.start_task(download_task)
+
+                    with open(filename, "wb") as file:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                file.write(chunk)
+                                if progress:
+                                    progress.update(download_task, advance=len(chunk))
+
+                    if progress:
+                        progress.update(download_task, filename="Download completed!")
+                        progress.stop_task(download_task)
+                    console.log(f"✅ Downloaded [cyan]{program}[/cyan] to attacker [green]{filename}[/green]")
+
+            except requests.exceptions.RequestException as e:
+                console.log(f"❌ Failed to download {program}: {e}")
+                raise
+
 
     def run(self, manager: "pwncat.manager.Manager", args):
 
@@ -65,7 +99,8 @@ class Command(CommandDefinition):
 
 
         self.program = os.path.join(self.DOWNLOAD_DIRECTORY, args.source)
-        self._download_prog(args.source)
+        #self._download_prog(args.source)
+        self._download_prog(args.source, progress)
 
         try:
             length = os.path.getsize(self.program)
@@ -88,6 +123,9 @@ class Command(CommandDefinition):
                 progress.update(task_id, filename="draining buffers...")
                 progress.stop_task(task_id)
 
+                while not progress.finished:
+                    time.sleep(0.02)
+
                     #progress.start_task(task_id)
                     #progress.update(task_id, filename=args.destination)
 
@@ -95,7 +133,7 @@ class Command(CommandDefinition):
             console.log(
                 f"uploaded [cyan]{human_readable_size(length)}[/cyan] "
                 f"in [green]{human_readable_delta(elapsed)}[/green]",
-                f"to [blue]{self.program}[/blue]",
+                f"to victim [blue]{self.program}[/blue]",
             )
         except (
             FileNotFoundError,
