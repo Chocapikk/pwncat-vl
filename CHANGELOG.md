@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added the command `upload_prog` this command downloads a program to the attacker machine and then uploads it to the victim
+
 ### Fixed
 - **Dockerfile**: pre-downloaded plugins (`windows-c2`, `badpotato`) never reached the final image. `pwncat-vl --download-plugins` ran in the *builder* stage and wrote them to `~/.local/share/pwncat`, but the final stage only copies `/usr/local`, so they were silently dropped and re-downloaded at runtime (failing offline). Moved the download into the *final* stage so the image ships with the plugins. Verified by building the image and listing the C2 DLLs in `/root/.local/share/pwncat`.
 
