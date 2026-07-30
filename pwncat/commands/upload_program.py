@@ -33,6 +33,9 @@ class Command(CommandDefinition):
         "linpeas_fat": "https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas_fat.sh",
         "linpeas_small": "https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas_small.sh",
         "winpeas": "https://github.com/peass-ng/PEASS-ng/releases/latest/download/winPEAS.bat",
+        "jq": "https://bin.pkgforge.dev/x86_64/jq",
+        "openssl": "https://bin.pkgforge.dev/x86_64/openssl",
+        "nmap": "https://bin.pkgforge.dev/x86_64/nmap",
     }
     ARGS = {
         "prog_name": Parameter(
