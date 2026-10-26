@@ -986,6 +986,14 @@ function prompt {
         except CalledProcessError:
             return None
 
+    def context_changed(self):
+        """The pwncat framework changed the shell or user context (for
+        example after an escalation). Re-resolve the cached Windows
+        identity so the tracked user and administrator state stay
+        accurate."""
+
+        self.refresh_uid()
+
     def refresh_uid(self):
         """Retrieve the current user ID. For Windows, this is done
         through System.Security.Principal.WindowsIdentity::GetCurrent().User."""
