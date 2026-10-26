@@ -35,7 +35,7 @@ import pwncat
 import pwncat.channel
 import pwncat.subprocess
 from pwncat import util
-from pwncat.channel import ChannelError
+from pwncat.channel import ChannelError, ChannelTimeout
 from pwncat.gtfobins import Stream, GTFOBins, Capability, MissingBinary
 from pwncat.platform import Path, Platform, PlatformError
 
@@ -583,9 +583,11 @@ class Linux(Platform):
         )
 
         # Drain any shell startup output (e.g. "bash: no job control",
-        # MOTD, or other banners) before sending commands
-        time.sleep(0.2)
-        self.channel.drain()
+        # MOTD, or other banners) before sending commands. We use a
+        # deterministic marker handshake instead of a fixed sleep so that
+        # late-arriving startup output on high-latency links cannot bleed
+        # into the first framed command and desync the parser.
+        self._sync_shell()
 
         # Ensure history is disabled
         self.disable_history()
@@ -658,11 +660,71 @@ class Linux(Platform):
                     # Wait for the new shell to be ready by sending a sync
                     # marker and waiting for it, instead of a fixed sleep.
                     # This drains any startup output (e.g. "no job control").
-                    time.sleep(0.1)
-                    self.channel.drain()
+                    self._sync_shell()
                     break
 
         self.refresh_uid()
+
+    def _sync_shell(self, timeout: float = 2.5):
+        """Deterministically flush shell startup output (job-control
+        banners, MOTD, prompts) by emitting a unique marker and reading
+        until the shell echoes it back.
+
+        The underlying socket is non-blocking, so ``channel.drain()`` only
+        clears whatever bytes have *already* arrived; pairing it with a
+        fixed ``time.sleep`` races late output on high-latency links. When
+        that output arrives after the drain, it bleeds into the first
+        framed command and desyncs the command parser, which then blocks
+        in ``recvuntil`` until it times out and the session is torn down.
+        Waiting for a marker we generated guarantees the shell has finished
+        printing its startup noise regardless of latency.
+
+        The marker is fully randomized -- both its content and its length
+        vary between calls -- so there is no fixed substring (not even a
+        constant prefix) that a defender could key a detection rule on.
+
+        Falls back to the previous best-effort sleep+drain if the marker is
+        never seen (e.g. an exotic shell without ``echo``), so this can
+        never regress relative to the old behavior. ``timeout`` is kept
+        short because ``recvuntil`` is not overridden for the socket
+        channel and spins byte-by-byte on the non-blocking socket, so the
+        fallback path would otherwise busy-wait the whole window.
+        """
+
+        # token_hex(n) yields 2*n lowercase-hex characters; randomizing n
+        # randomizes the marker length as well as its content.
+        marker = secrets.token_hex(secrets.randbelow(9) + 8)  # 16..32 chars
+        marker_b = marker.encode()
+
+        # Split the random marker at a random interior point and emit the
+        # halves as two adjacent shell string literals: `echo "<a>""<b>"`.
+        # The shell concatenates them into `<a><b>` on stdout, but the
+        # command text keeps the `""` between the halves, so the unbroken
+        # marker only ever appears in the command's *output* -- never in a
+        # PTY's echo of the command line, which would otherwise false-match.
+        split = secrets.randbelow(len(marker) - 1) + 1
+        self.channel.send(
+            b'echo "' + marker[:split].encode() + b'""'
+            + marker[split:].encode() + b'"\n'
+        )
+
+        try:
+            self.channel.recvuntil(marker_b, timeout=timeout)
+        except ChannelTimeout:
+            # The marker never came back. Fall back to the legacy
+            # best-effort drain so we degrade gracefully rather than fail.
+            time.sleep(0.2)
+            self.channel.drain()
+            return
+
+        # The marker matched: the shell has finished its startup output and
+        # the stream is back in sync. Consuming the trailing newline is
+        # cosmetic, so give it only a brief window and ignore a miss rather
+        # than paying the full timeout again.
+        try:
+            self.channel.recvuntil(b"\n", timeout=0.5)
+        except ChannelTimeout:
+            pass
 
     def exit(self):
         """Exit this session"""
