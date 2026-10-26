@@ -95,7 +95,7 @@ def _echoing_shell(victim, *, banner_delay, echo_command=False, stop=None):
                 line = line.strip()
                 if line.startswith(b"echo "):
                     # Shell concatenates adjacent quoted literals and strips
-                    # the quotes: `echo "PWNCAT""<tok>"` -> `PWNCAT<tok>`.
+                    # the quotes: `echo "<a>""<b>"` -> `<a><b>`.
                     out = line[len(b"echo "):].replace(b'"', b"")
                     victim.sendall(out + b"\n")
 
@@ -143,7 +143,7 @@ class TestSyncShellConsumesStartupOutput:
 class TestSyncShellRobustness:
     def test_pty_command_echo_does_not_false_match(self):
         """On a PTY-backed shell the command line is echoed before its
-        output. The split marker literal (``"PWNCAT""<tok>"``) must ensure
+        output. The split marker literal (``"<a>""<b>"``) must ensure
         the handshake only matches the real output, not the echo."""
 
         attacker, victim = _tcp_pair()
@@ -173,3 +173,66 @@ class TestSyncShellRobustness:
 
         assert elapsed >= 1.0  # waited for the timeout, then fell back
         assert elapsed < 5.0  # but did not hang
+
+    def test_default_timeout_is_short(self):
+        """The fallback path busy-waits (``recvuntil`` spins byte-by-byte on
+        the non-blocking socket), so the default timeout must stay small
+        rather than the original 10s (PR review point 2)."""
+
+        import inspect
+
+        default = inspect.signature(Linux._sync_shell).parameters["timeout"].default
+        assert default <= 3.0
+
+    def test_marker_is_randomized_with_no_fixed_signature(self):
+        """The emitted marker must carry no constant substring -- not even a
+        fixed prefix -- and must vary in both content and length between
+        calls, so there is nothing static to fingerprint (PR review
+        point 1)."""
+
+        def capture_one():
+            attacker, victim = _tcp_pair()
+            captured = {}
+            stop = threading.Event()
+
+            def shell():
+                buf = b""
+                while not stop.is_set():
+                    try:
+                        victim.settimeout(0.2)
+                        chunk = victim.recv(4096)
+                    except socket.timeout:
+                        continue
+                    except OSError:
+                        return
+                    if not chunk:
+                        return
+                    buf += chunk
+                    while b"\n" in buf:
+                        line, buf = buf.split(b"\n", 1)
+                        line = line.strip()
+                        if line.startswith(b"echo "):
+                            captured["cmd"] = line
+                            out = line[len(b"echo "):].replace(b'"', b"")
+                            victim.sendall(out + b"\n")
+
+            t = threading.Thread(target=shell, daemon=True)
+            t.start()
+            channel = Socket(client=attacker, host="victim", port=4444)
+            Linux._sync_shell(_platform_with(channel))
+            stop.set()
+            t.join(timeout=2)
+            # The marker is the command's output: the halves with quotes
+            # stripped.
+            return captured["cmd"][len(b"echo "):].replace(b'"', b"")
+
+        markers = [capture_one() for _ in range(8)]
+
+        for marker in markers:
+            assert not marker.startswith(b"PWNCAT")
+            # Pure lowercase hex: no fixed literal smuggled into the marker.
+            assert marker and all(c in b"0123456789abcdef" for c in marker)
+
+        # Content is unique per call and the length is not constant.
+        assert len(set(markers)) == len(markers)
+        assert len({len(m) for m in markers}) > 1
